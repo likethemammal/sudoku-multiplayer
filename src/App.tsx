@@ -14,7 +14,35 @@ import {
 import { FaMousePointer } from "react-icons/fa";
 import Tooltip from "@tippyjs/react";
 import "react-tippy/dist/tippy.css";
+
 const mouseStyles = cva("w-4 h-8 absolute text-2xl -translate-x-1");
+
+const inputStyles = cva(
+  "transition-colors w-7 h-7 sm:w-10 sm:h-10 text-lg font-bold text-center relative focus:outline-none focus:border-blue-500",
+  {
+    variants: {
+      selected: {
+        true: "",
+        false: "",
+      },
+      isInitial: {
+        true: "bg-gray-100 text-gray-700 disabled:text-gray-700",
+        false: "bg-white border-2 border-gray-300",
+      },
+      wrong: {
+        true: "",
+        false: "",
+      },
+    },
+    compoundVariants: [
+      {
+        selected: false,
+        wrong: true,
+        className: "bg-red-300 border-red-500",
+      },
+    ],
+  }
+);
 
 import _ from "lodash";
 
@@ -56,14 +84,28 @@ function App() {
     "initialGrid",
     []
   );
+  const [solutionGridState, setSolutionGridState] = useMultiplayerState(
+    "solutionGrid",
+    []
+  );
   const [gridState, setGridState] = useMultiplayerState("grid", []);
   const [personalGridState, setPersonalGridState] = usePlayerState(
     me,
     "gridState",
     []
   );
+  const [solutionAttempts, setSolutionAttempts] = usePlayerState(
+    me,
+    "solutionAttempts",
+    0
+  );
   const [forceUpdate, setForceUpdate] = useMultiplayerState("forceUpdate", 0);
+  const [difficulty, setDifficulty] = useMultiplayerState(
+    "difficulty",
+    "very-hard"
+  );
   const [message, setMessage] = useState("");
+  const [wrongIndexes, setWrongIndexes] = useState([]);
   const [selectedIndex, setSelectedIndex] = usePlayerState(
     me,
     "selectedIndex",
@@ -86,19 +128,37 @@ function App() {
 
   const myColor = me?.state?.profile?.color;
 
-  // Set initial grid state
+  const hasWrongIndexes = !!wrongIndexes.length;
+
+  const hasSolutionAttempts = !!solutionAttempts;
+
+  useEffect(() => {
+    if (!message) {
+      return;
+    }
+
+    console.log(message);
+  }, [message]);
+
   useEffect(() => {
     if (!isHost) {
       return;
     }
 
-    const str = sudoku.generate("very-hard");
-    const characters = str.split("");
+    const challengeStr = sudoku.generate(difficulty);
+    const solutionStr = sudoku.solve(challengeStr);
+    const characters = challengeStr.split("");
+    const solution = solutionStr.split("");
     const initialGrid = splitIntoGrids(characters);
+    const solutionGrid = splitIntoGrids(solution);
+
+    setSolutionGridState(solutionGrid);
+    setWrongIndexes([]);
+    setMessage("");
 
     setInitialGridState(initialGrid);
     setPersonalGridState(initialGrid);
-  }, []);
+  }, [difficulty]);
 
   useEffect(() => {
     if (isHost) {
@@ -113,6 +173,17 @@ function App() {
     if (value === "" || (value.match(/^[1-9]$/) && value.length === 1)) {
       let newGrid = [...personalGridState];
       newGrid[gridIndex][cellIndex] = value || ".";
+
+      let newWrongGrid = [...wrongIndexes];
+
+      const wrongIndex = newWrongGrid.indexOf(`${gridIndex}${cellIndex}`);
+
+      const hasWrong = wrongIndex > 0;
+
+      if (hasWrong && value) {
+        newWrongGrid.splice(wrongIndex, 1);
+        setWrongIndexes(newWrongGrid);
+      }
 
       setPersonalGridState(newGrid, true);
       setForceUpdate(forceUpdate + 1, true);
@@ -137,9 +208,39 @@ function App() {
     // Flatten the grid
     const flatGrid = completeGridState.flat();
 
-    // Check if all cells are filled
-    if (flatGrid.includes(".")) {
-      setMessage("Please fill in all cells before submitting!");
+    let _wrongIndexes = [];
+
+    completeGridState.map((grid, gridIndex) => {
+      grid.map((value, cellIndex) => {
+        const index = `${gridIndex}${cellIndex}`;
+
+        const doesExist = !!value;
+        const isEmpty = value === ".";
+        const hasValue = doesExist && !isEmpty;
+
+        const solutionCharacter = solutionGridState[gridIndex][cellIndex];
+
+        const isCorrect = value === solutionCharacter;
+
+        const isWrong = !hasValue || !isCorrect;
+
+        if (isWrong) {
+          _wrongIndexes.push(index);
+        }
+      });
+    });
+
+    setSolutionAttempts(solutionAttempts + 1);
+
+    if (_wrongIndexes.length) {
+      if (flatGrid.includes(".")) {
+        setMessage("Please fill in all cells before submitting!");
+        setWrongIndexes(_wrongIndexes);
+        return;
+      }
+
+      setMessage("Some of the numbers are wrong");
+      setWrongIndexes(_wrongIndexes);
       return;
     }
 
@@ -187,9 +288,51 @@ function App() {
   //   });
   // }, 20);
 
+  const difficulties = [
+    {
+      value: "easy",
+      label: "🚗 Basic",
+    },
+    {
+      value: "medium",
+      label: "🚎 Intermediate",
+    },
+    {
+      value: "hard",
+      label: "🚄 Advanced",
+    },
+    {
+      value: "very-hard",
+      label: "🚀 Expert",
+    },
+    {
+      value: "insane",
+      label: "☄ Guru",
+    },
+    {
+      value: "inhuman",
+      label: "🌌 Galaxy Brain",
+    },
+  ];
+
   return (
     <main className="flex flex-col items-center gap-8 py-16 max-w-[1280px] mx-auto">
       <h1 className="text-4xl font-bold">Sudoku Multiplayer</h1>
+      <select
+        className="w-48 rounded border border-gray-300 px-3 py-2"
+        value={difficulty}
+        onChange={(ev) => {
+          setDifficulty(ev.target.value);
+        }}
+      >
+        <option value="" disabled selected>
+          Select difficulty
+        </option>
+        {difficulties.map(({ value, label }) => {
+          return <option value={value}>{label}</option>;
+        })}
+      </select>
+      <div className="">{message}</div>
 
       <div className="flex flex-row items-center gap-6">
         {otherPlayers.map((player, i) => (
@@ -252,6 +395,8 @@ function App() {
                 : {};
               const position = getCellPosition(gridIndex, cellIndex);
 
+              const isWrong = !!wrongIndexes.includes(index);
+
               return (
                 <div className="">
                   <Tooltip
@@ -273,15 +418,11 @@ function App() {
                       key={index}
                       type="tel"
                       maxLength="1"
-                      className={cx(
-                        "w-7 h-7 sm:w-10 sm:h-10 text-lg font-bold text-center relative",
-                        isInitial
-                          ? "bg-gray-100 text-gray-700 disabled:text-gray-700"
-                          : "bg-white border-2 border-gray-300",
-                        "focus:outline-none focus:border-blue-500",
-                        selected ? "" : "",
-                        "transition-colors"
-                      )}
+                      className={inputStyles({
+                        wrong: isWrong,
+                        isInitial,
+                        selected,
+                      })}
                       style={{
                         borderColor: selectedPlayer?.state?.profile?.color,
                         color: isSelectedIndex ? null : otherColor || null,
@@ -324,6 +465,27 @@ function App() {
       >
         Submit Solution
       </button>
+      {hasWrongIndexes ? (
+        <button
+          onClick={() => setWrongIndexes([])}
+          className="px-6 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors"
+        >
+          Clear errors
+        </button>
+      ) : (
+        <></>
+      )}
+      {hasSolutionAttempts ? (
+        <button
+          onClick={() => setSolutionAttempts(0)}
+          className="px-6 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors"
+        >
+          Clear attempts
+        </button>
+      ) : (
+        <></>
+      )}
+      <div className="">{`Attempts made: ${solutionAttempts}`}</div>
     </main>
   );
 }
