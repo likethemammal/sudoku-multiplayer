@@ -16,7 +16,7 @@ import Tooltip from "@tippyjs/react";
 import "react-tippy/dist/tippy.css";
 
 const mainStyles = cva(
-  "flex flex-col items-center gap-y-6 pt-12 pb-8 max-w-[1280px] mx-auto bg-slate-100"
+  "flex flex-col items-center gap-y-6 pt-12 pb-8 max-w-[1280px] mx-auto"
 );
 
 const mouseStyles = cva("w-2 h-4 text-1xl text-slate-300");
@@ -39,7 +39,7 @@ const inputStyles = cva(
       },
       isInitial: {
         true: "bg-slate-100 text-slate-700 disabled:text-slate-700",
-        false: "bg-white border-2 border-slate-300",
+        false: "border-2",
       },
       wrong: {
         true: "",
@@ -51,6 +51,11 @@ const inputStyles = cva(
         selected: false,
         wrong: true,
         className: "bg-red-200 border-red-300",
+      },
+      {
+        isInitial: false,
+        wrong: false,
+        className: "bg-white border-slate-300",
       },
     ],
   }
