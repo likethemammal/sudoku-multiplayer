@@ -15,7 +15,19 @@ import { FaMousePointer } from "react-icons/fa";
 import Tooltip from "@tippyjs/react";
 import "react-tippy/dist/tippy.css";
 
-const mouseStyles = cva("w-4 h-8 absolute text-2xl -translate-x-1");
+const mainStyles = cva(
+  "flex flex-col items-center gap-y-6 pt-12 pb-8 max-w-[1280px] mx-auto bg-slate-100"
+);
+
+const mouseStyles = cva("w-2 h-4 text-1xl text-slate-300");
+const mouseSlotStyles = cva("flex flex-row items-center gap-x-2 pt-2");
+const difficultyStyles = cva(
+  "w-48 rounded border-2 border-slate-300 px-3 py-2"
+);
+const subgridStyles = cva("grid grid-cols-3 gap-2");
+const gridStyles = cva(
+  "grid grid-cols-3 gap-4 min-[400px]:gap-6 sm:gap-4 bg-white p-6 rounded-lg shadow-xl border border-slate-200"
+);
 
 const inputStyles = cva(
   "transition-colors w-7 h-7 sm:w-10 sm:h-10 text-lg font-bold text-center relative focus:outline-none focus:border-blue-500",
@@ -26,8 +38,8 @@ const inputStyles = cva(
         false: "",
       },
       isInitial: {
-        true: "bg-gray-100 text-gray-700 disabled:text-gray-700",
-        false: "bg-white border-2 border-gray-300",
+        true: "bg-slate-100 text-slate-700 disabled:text-slate-700",
+        false: "bg-white border-2 border-slate-300",
       },
       wrong: {
         true: "",
@@ -38,7 +50,7 @@ const inputStyles = cva(
       {
         selected: false,
         wrong: true,
-        className: "bg-red-300 border-red-500",
+        className: "bg-red-200 border-red-300",
       },
     ],
   }
@@ -131,6 +143,8 @@ function App() {
   const hasWrongIndexes = !!wrongIndexes.length;
 
   const hasSolutionAttempts = !!solutionAttempts;
+
+  const playerSlots = players.concat([...Array(4 - players.length)]);
 
   useEffect(() => {
     if (!message) {
@@ -264,11 +278,11 @@ function App() {
 
   const getTooltipContent = (gridIndex, cellIndex, value, isInitial) => {
     return (
-      <div className="grid grid-cols-3 p-3 bg-white rounded-xl gap-2 shadow-lg">
+      <div className="grid grid-cols-3 p-3 bg-white rounded-xl gap-2 shadow-xl">
         {[...Array(9)].map((__, i) => {
           return (
             <button
-              className="w-8 h-8 border-2 font-bold rounded bg-gray-100 flex items-center justify-center cursor-pointer hover:bg-gray-200"
+              className="w-8 h-8 border-2 font-bold rounded bg-slate-100 flex items-center justify-center cursor-pointer hover:bg-slate-200"
               onClick={() => {
                 handleInputChange(gridIndex, cellIndex, `${i + 1}`);
               }}
@@ -316,10 +330,29 @@ function App() {
   ];
 
   return (
-    <main className="flex flex-col items-center gap-8 py-16 max-w-[1280px] mx-auto">
-      <h1 className="text-4xl font-bold">Sudoku Multiplayer</h1>
+    <main className={mainStyles()}>
+      <h1 className="grid justify-center">
+        <span className="text-6xl font-bold">Sudoku</span>
+        <span className="text-2xl font-bold">Multiplayer</span>
+        <div className={mouseSlotStyles()}>
+          {playerSlots.map((player, i) => (
+            <div
+              key={i}
+              className={mouseStyles()}
+              style={{
+                // left: `${player?.state?.pos?.x * width}px`,
+                // top: `${player?.state?.pos?.y * height}px`,
+                color: player?.state?.profile?.color,
+              }}
+            >
+              <FaMousePointer />
+            </div>
+          ))}
+        </div>
+      </h1>
+
       <select
-        className="w-48 rounded border border-gray-300 px-3 py-2"
+        className={difficultyStyles()}
         value={difficulty}
         onChange={(ev) => {
           setDifficulty(ev.target.value);
@@ -329,30 +362,16 @@ function App() {
           Select difficulty
         </option>
         {difficulties.map(({ value, label }) => {
-          return <option value={value}>{label}</option>;
+          return (
+            <option className="" value={value}>
+              {label}
+            </option>
+          );
         })}
       </select>
-      <div className="">{message}</div>
-
-      <div className="flex flex-row items-center gap-6">
-        {otherPlayers.map((player, i) => (
-          <div
-            key={i}
-            className={mouseStyles()}
-            style={{
-              left: `${player?.state?.pos?.x * width}px`,
-              top: `${player?.state?.pos?.y * height}px`,
-              color: player?.state?.profile?.color,
-            }}
-          >
-            <FaMousePointer />
-          </div>
-        ))}
-      </div>
-
-      <div className="grid grid-cols-3 gap-4 min-[400px]:gap-6 sm:gap-4 bg-white p-6 rounded-lg shadow-lg">
+      <div className={gridStyles()}>
         {personalGridState.map((grid, gridIndex) => (
-          <div key={gridIndex} className="grid grid-cols-3 gap-2">
+          <div key={gridIndex} className={subgridStyles()}>
             {grid.map((character, cellIndex) => {
               const isEmptyForMe = character === ".";
 
@@ -459,32 +478,35 @@ function App() {
         ))}
       </div>
 
-      <button
-        onClick={checkSolution}
-        className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
-      >
-        Submit Solution
-      </button>
-      {hasWrongIndexes ? (
+      <div className="h-[1em]">{message}</div>
+      <div className="flex gap-x-4">
         <button
-          onClick={() => setWrongIndexes([])}
-          className="px-6 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors"
+          onClick={checkSolution}
+          className="font-bold px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
         >
-          Clear errors
+          Submit Solution
         </button>
-      ) : (
-        <></>
-      )}
-      {hasSolutionAttempts ? (
-        <button
-          onClick={() => setSolutionAttempts(0)}
-          className="px-6 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors"
-        >
-          Clear attempts
-        </button>
-      ) : (
-        <></>
-      )}
+        {hasWrongIndexes ? (
+          <button
+            onClick={() => setWrongIndexes([])}
+            className="font-bold px-6 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors"
+          >
+            Clear errors
+          </button>
+        ) : (
+          <></>
+        )}
+        {hasSolutionAttempts ? (
+          <button
+            onClick={() => setSolutionAttempts(0)}
+            className="font-bold px-6 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors"
+          >
+            Clear attempts
+          </button>
+        ) : (
+          <></>
+        )}
+      </div>
       <div className="">{`Attempts made: ${solutionAttempts}`}</div>
     </main>
   );
