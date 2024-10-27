@@ -12,7 +12,7 @@ import {
   usePlayersList,
   usePlayersState,
 } from "playroomkit";
-import { FaCheck, FaMousePointer } from "react-icons/fa";
+import { FaCheck, FaMousePointer, FaStar } from "react-icons/fa";
 import Tooltip from "@tippyjs/react";
 import "react-tippy/dist/tippy.css";
 
@@ -40,6 +40,8 @@ const buttonStyles = cva(
       intent: {
         gray: "",
         blue: "text-white",
+        green:
+          "text-white  outline bg-green-600 outline-4 outline-offset-2 outline-green-600",
         yellow: "text-white",
       },
       icon: {
@@ -48,6 +50,7 @@ const buttonStyles = cva(
     },
     defaultVariants: {
       intent: "blue",
+      disabled: false,
     },
     compoundVariants: [
       {
@@ -81,8 +84,24 @@ const buttonStyles = cva(
         disabled: true,
         className: "bg-yellow-300",
       },
+      {
+        intent: "green",
+        disabled: false,
+        className: "hover:bg-green-700",
+      },
+      {
+        intent: "green",
+        disabled: true,
+        className: "",
+      },
     ],
   }
+);
+const tooltipItemStyles = cva(
+  "w-8 h-8 border-2 border-slate-300 bg-slate-100 font-bold rounded flex items-center justify-center cursor-pointer hover:bg-slate-200"
+);
+const tooltipItemsStyles = cva(
+  "grid grid-cols-3 p-3 bg-white rounded-xl gap-2 shadow-xl"
 );
 const subgridStyles = cva("grid grid-cols-3 gap-2");
 const inputContainerStyles = cva("");
@@ -224,6 +243,8 @@ function App() {
   const gridStates = usePlayersState("gridState");
 
   const [tempInputValue, setTempInputValue] = useState("");
+  const [succeeded, setSucceeded] = useState(false);
+  const [autoSolve, setAutoSolve] = useState(false);
 
   const otherGridStates = gridStates.filter(({ player }) => {
     return me.id !== player.id;
@@ -289,10 +310,13 @@ function App() {
     setSolutionGridState(solutionGrid);
     setWrongIndexes([]);
     setMessage("");
+    setSucceeded(false);
 
-    setHistory([initialGrid]);
+    const grid = autoSolve ? solutionGrid : initialGrid;
+
+    setHistory([grid]);
     setInitialGridState(initialGrid);
-    setPersonalGridState(initialGrid);
+    setPersonalGridState(grid);
   }, [difficulty]);
 
   useEffect(() => {
@@ -307,6 +331,13 @@ function App() {
   const handleInputChange = (gridIndex, cellIndex, value) => {
     if (value === "" || (value.match(/^[1-9]$/) && value.length === 1)) {
       let newGrid = [...personalGridState];
+
+      const currentValue = newGrid[gridIndex][cellIndex];
+
+      if (value === currentValue) {
+        return;
+      }
+
       newGrid[gridIndex][cellIndex] = value || ".";
 
       let newWrongGrid = [...wrongIndexes];
@@ -320,6 +351,7 @@ function App() {
         setWrongIndexes(newWrongGrid);
       }
 
+      setSucceeded(false);
       setHistory((prev) => [...prev, personalGridState]);
       setPersonalGridState(newGrid, true);
       setForceUpdate(forceUpdate + 1, true);
@@ -341,6 +373,10 @@ function App() {
 
   // Check if the solution is valid
   const checkSolution = () => {
+    if (succeeded) {
+      return;
+    }
+
     // Flatten the grid
     const flatGrid = completeGridState.flat();
 
@@ -380,11 +416,9 @@ function App() {
       return;
     }
 
-    // Here you would add your Sudoku validation logic
-    // For this example, we'll just check if all numbers are filled
-    setMessage(
-      "Solution submitted! Implementation of validation logic needed."
-    );
+    setMessage("Solution successful");
+
+    setSucceeded(true);
   };
 
   const getCellPosition = (gridIndex, cellIndex) => {
@@ -400,11 +434,11 @@ function App() {
 
   const getTooltipContent = (gridIndex, cellIndex, value, isInitial) => {
     return (
-      <div className="grid grid-cols-3 p-3 bg-white rounded-xl gap-2 shadow-xl">
+      <div className={tooltipItemsStyles()}>
         {[...Array(9)].map((__, i) => {
           return (
             <button
-              className="w-8 h-8 border-2 border-slate-300 bg-slate-100 font-bold rounded flex items-center justify-center cursor-pointer hover:bg-slate-100"
+              className={tooltipItemStyles()}
               onClick={() => {
                 handleInputChange(gridIndex, cellIndex, `${i + 1}`);
               }}
@@ -618,13 +652,14 @@ function App() {
       <div className="h-[1em]">{message}</div>
       <div className="flex gap-x-4">
         <button
+          disabled={succeeded}
           onClick={checkSolution}
           className={buttonStyles({
-            intent: "blue",
-            disabled: false,
+            intent: succeeded ? "green" : "blue",
+            disabled: succeeded,
           })}
         >
-          <FaCheck />
+          {succeeded ? <FaStar /> : <FaCheck />}
           <span className={buttonTextStyles()}>Submit</span>
         </button>
         <button
