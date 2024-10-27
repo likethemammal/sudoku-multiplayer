@@ -14,7 +14,10 @@ const renderApp = () => {
 };
 
 async function init() {
-  await insertCoin({ gameId: process.env.VITE_PLAYROOM_GAME_ID });
+  await insertCoin({
+    discord: true,
+    gameId: process.env.VITE_PLAYROOM_GAME_ID,
+  });
 
   renderApp();
 }

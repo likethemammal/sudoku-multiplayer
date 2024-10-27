@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, useMemo } from "react";
 import useMousePosition from "./hooks/useMousePosition";
 import useWindowSize from "./hooks/useWindowSize";
 import useFrame from "./hooks/useFrame";
+import usePrevious from "./hooks/usePrevious";
 import { cva, cx } from "class-variance-authority";
 import {
   myPlayer,
@@ -11,7 +12,7 @@ import {
   usePlayersList,
   usePlayersState,
 } from "playroomkit";
-import { FaMousePointer } from "react-icons/fa";
+import { FaCheck, FaMousePointer } from "react-icons/fa";
 import Tooltip from "@tippyjs/react";
 import "react-tippy/dist/tippy.css";
 
@@ -19,18 +20,81 @@ const mainStyles = cva(
   "flex flex-col items-center gap-y-6 pt-12 pb-8 max-w-[1280px] mx-auto"
 );
 
+const buttonTextStyles = cva("text-lg");
 const mouseStyles = cva("w-2 h-4 text-1xl text-slate-300");
 const mouseSlotStyles = cva("flex flex-row items-center gap-x-2 pt-2");
+const playerSlotStyles = cva("w-4 h-4 border-2 border-slate-300");
+const playerSlotsStyles = cva("flex flex-row items-center gap-x-1 pt-2");
+
 const difficultyStyles = cva(
   "w-48 rounded border-2 border-slate-300 px-3 py-2"
 );
+const buttonStyles = cva(
+  "flex text-xl items-center gap-x-2 font-bold px-6 py-2 rounded-lg transition-colors",
+  {
+    variants: {
+      disabled: {
+        true: "",
+        false: "",
+      },
+      intent: {
+        gray: "",
+        blue: "text-white",
+        yellow: "text-white",
+      },
+      icon: {
+        true: "text-3xl",
+      },
+    },
+    defaultVariants: {
+      intent: "blue",
+    },
+    compoundVariants: [
+      {
+        intent: "gray",
+        disabled: false,
+        className:
+          "bg-slate-300 hover:text-slate-700 active:bg-slate-400 text-slate-500",
+      },
+      {
+        intent: "gray",
+        disabled: true,
+        className: "bg-slate-200 text-white",
+      },
+      {
+        intent: "blue",
+        disabled: false,
+        className: "hover:bg-blue-600 bg-blue-500",
+      },
+      {
+        intent: "blue",
+        disabled: true,
+        className: "bg-blue-300",
+      },
+      {
+        intent: "yellow",
+        disabled: false,
+        className: "hover:bg-yellow-700 bg-yellow-600",
+      },
+      {
+        intent: "yellow",
+        disabled: true,
+        className: "bg-yellow-300",
+      },
+    ],
+  }
+);
 const subgridStyles = cva("grid grid-cols-3 gap-2");
+const inputContainerStyles = cva("");
+const inputBadgeStyles = cva(
+  "absolute flex items-center justify-center z-10 rounded-full -translate-y-2/4 translate-x-2/4 w-8 h-8 top-0 right-0 bg-red-200"
+);
 const gridStyles = cva(
-  "grid grid-cols-3 gap-4 min-[400px]:gap-6 sm:gap-4 bg-white p-6 rounded-lg shadow-xl border border-slate-200"
+  "grid grid-cols-3 gap-4 min-[400px]:gap-6 sm:gap-5 bg-white p-6 rounded-lg shadow-xl border border-slate-200"
 );
 
 const inputStyles = cva(
-  "transition-colors w-7 h-7 sm:w-10 sm:h-10 text-lg font-bold text-center relative focus:outline-none focus:border-blue-500",
+  "transition-colors w-7 h-7 sm:w-10 sm:h-10 text-lg font-bold border-2 text-center relative focus:outline-none focus:border-blue-500",
   {
     variants: {
       selected: {
@@ -38,8 +102,8 @@ const inputStyles = cva(
         false: "",
       },
       isInitial: {
-        true: "bg-slate-100 text-slate-700 disabled:text-slate-700",
-        false: "border-2",
+        true: "bg-slate-100 border-slate-200 text-slate-700 disabled:text-slate-700",
+        false: "",
       },
       wrong: {
         true: "",
@@ -62,28 +126,53 @@ const inputStyles = cva(
 );
 
 import _ from "lodash";
+import { IoIosUndo } from "react-icons/io";
+import { FaDeleteLeft } from "react-icons/fa6";
+import { TiDelete } from "react-icons/ti";
+import { RiDeleteBack2Fill } from "react-icons/ri";
+import { MdClose, MdDelete, MdDeleteForever } from "react-icons/md";
+import { AiFillDelete } from "react-icons/ai";
 
-function splitIntoGrids(array) {
-  const result = [];
-  let currentChunk = [];
+function board_string_to_grid(board_string) {
+  // Validate input length
+  if (board_string.length !== 81) {
+    throw new Error("Board string must be exactly 81 characters long");
+  }
 
-  for (let i = 0; i < array.length; i++) {
-    currentChunk.push(array[i]);
-    if ((i + 1) % 9 === 0 || i === array.length - 1) {
-      result.push(currentChunk);
-      currentChunk = [];
+  // Initialize the 9x9 grid
+  let grid = Array(9)
+    .fill()
+    .map(() => Array(9).fill("."));
+
+  // Convert string to array of characters
+  const chars = board_string.split("");
+
+  let stringIndex = 0;
+
+  // Iterate through each 3x3 block from left to right, top to bottom
+  for (let blockRow = 0; blockRow < 3; blockRow++) {
+    for (let blockCol = 0; blockCol < 3; blockCol++) {
+      // Within each 3x3 block
+      for (let innerRow = 0; innerRow < 3; innerRow++) {
+        for (let innerCol = 0; innerCol < 3; innerCol++) {
+          // Calculate the actual position in the grid
+          const row = blockRow * 3 + innerRow;
+          const col = blockCol * 3 + innerCol;
+          grid[row][col] = chars[stringIndex++];
+        }
+      }
     }
   }
-  return result;
-}
 
+  return grid;
+}
 function App() {
-  const ref = useRef();
-  const positionRef = useMousePosition();
+  // const ref = useRef();
+  // const positionRef = useMousePosition();
   const me = myPlayer();
   const players = usePlayersList(true);
   const isHost = useIsHost();
-  const { width, height } = useWindowSize();
+  // const { width, height } = useWindowSize();
 
   const otherPlayers = players.filter((player) => {
     return me.id !== player.id;
@@ -111,6 +200,9 @@ function App() {
     "gridState",
     []
   );
+
+  const [history, setHistory] = useState([]);
+
   const [solutionAttempts, setSolutionAttempts] = usePlayerState(
     me,
     "solutionAttempts",
@@ -151,6 +243,27 @@ function App() {
 
   const playerSlots = players.concat([...Array(4 - players.length)]);
 
+  const prevPersonalGridState = history[history.length - 2];
+  const hasPrevPersonalGridState = !!prevPersonalGridState?.length;
+
+  const disabled_undo = !hasPrevPersonalGridState;
+
+  // const addToHistory = (gridState) => {
+  //   setHistory((prev) => {
+  //     if (!gridState || !gridState.length) {
+  //       return prev;
+  //     }
+
+  //     console.log(prev, gridState);
+
+  //     return [...prev, gridState];
+  //   });
+  // };
+
+  // useEffect(() => {
+  //   addToHistory(personalGridState);
+  // }, [personalGridState]);
+
   useEffect(() => {
     if (!message) {
       return;
@@ -168,13 +281,16 @@ function App() {
     const solutionStr = sudoku.solve(challengeStr);
     const characters = challengeStr.split("");
     const solution = solutionStr.split("");
-    const initialGrid = splitIntoGrids(characters);
-    const solutionGrid = splitIntoGrids(solution);
+    const initialGrid = board_string_to_grid(challengeStr);
+    const solutionGrid = board_string_to_grid(solutionStr);
+
+    // sudoku.print_board(challengeStr);
 
     setSolutionGridState(solutionGrid);
     setWrongIndexes([]);
     setMessage("");
 
+    setHistory([initialGrid]);
     setInitialGridState(initialGrid);
     setPersonalGridState(initialGrid);
   }, [difficulty]);
@@ -197,13 +313,14 @@ function App() {
 
       const wrongIndex = newWrongGrid.indexOf(`${gridIndex}${cellIndex}`);
 
-      const hasWrong = wrongIndex > 0;
+      const hasWrong = wrongIndex >= 0;
 
       if (hasWrong && value) {
         newWrongGrid.splice(wrongIndex, 1);
         setWrongIndexes(newWrongGrid);
       }
 
+      setHistory((prev) => [...prev, personalGridState]);
       setPersonalGridState(newGrid, true);
       setForceUpdate(forceUpdate + 1, true);
     }
@@ -287,7 +404,7 @@ function App() {
         {[...Array(9)].map((__, i) => {
           return (
             <button
-              className="w-8 h-8 border-2 font-bold rounded bg-slate-100 flex items-center justify-center cursor-pointer hover:bg-slate-200"
+              className="w-8 h-8 border-2 border-slate-300 bg-slate-100 font-bold rounded flex items-center justify-center cursor-pointer hover:bg-slate-100"
               onClick={() => {
                 handleInputChange(gridIndex, cellIndex, `${i + 1}`);
               }}
@@ -422,7 +539,8 @@ function App() {
               const isWrong = !!wrongIndexes.includes(index);
 
               return (
-                <div className="">
+                <div className={inputContainerStyles()}>
+                  {/* <div className={inputBadgeStyles()}>{index}</div> */}
                   <Tooltip
                     // ref={tippyRef}
                     content={getTooltipContent(
@@ -454,7 +572,21 @@ function App() {
                       onBlur={() => {
                         setSelectedIndex(false);
 
-                        if (otherCharacter !== tempInputValue) {
+                        const hasOther = typeof otherCharacter !== "undefined";
+                        const hasTemp = typeof tempInputValue !== "undefined";
+
+                        const has = hasTemp && hasOther;
+
+                        console.log(tempInputValue, isEmpty, character);
+
+                        if (!tempInputValue && isEmpty) {
+                          return;
+                        }
+
+                        if (
+                          (hasOther && otherCharacter !== tempInputValue) ||
+                          (hasTemp && otherCharacter !== tempInputValue)
+                        ) {
                           handleInputChange(
                             gridIndex,
                             cellIndex,
@@ -487,16 +619,46 @@ function App() {
       <div className="flex gap-x-4">
         <button
           onClick={checkSolution}
-          className="font-bold px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+          className={buttonStyles({
+            intent: "blue",
+            disabled: false,
+          })}
         >
-          Submit Solution
+          <FaCheck />
+          <span className={buttonTextStyles()}>Submit</span>
+        </button>
+        <button
+          disabled={disabled_undo}
+          onClick={() => {
+            let newHistory = [...history];
+            newHistory.splice(newHistory.length - 1, 1);
+
+            setPersonalGridState(
+              history[history.length - 2] || initialGridState
+            );
+            setHistory(newHistory);
+          }}
+          className={buttonStyles({
+            disabled: disabled_undo,
+            icon: true,
+            intent: "gray",
+          })}
+        >
+          <IoIosUndo />
         </button>
         {hasWrongIndexes ? (
           <button
-            onClick={() => setWrongIndexes([])}
-            className="font-bold px-6 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors"
+            onClick={() => {
+              setWrongIndexes([]);
+              setMessage("");
+            }}
+            className={buttonStyles({
+              intent: "yellow",
+              disabled: false,
+            })}
           >
-            Clear errors
+            <span className={buttonTextStyles()}>Clear errors</span>
+            <AiFillDelete />
           </button>
         ) : (
           <></>
