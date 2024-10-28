@@ -146,11 +146,18 @@ const inputStyles = cva(
 
 import _ from "lodash";
 import { IoIosUndo } from "react-icons/io";
-import { FaDeleteLeft } from "react-icons/fa6";
+import { FaDeleteLeft, FaWandMagicSparkles } from "react-icons/fa6";
 import { TiDelete } from "react-icons/ti";
-import { RiDeleteBack2Fill } from "react-icons/ri";
-import { MdClose, MdDelete, MdDeleteForever } from "react-icons/md";
+import { RiDeleteBack2Fill, RiRestartLine } from "react-icons/ri";
+import {
+  MdClose,
+  MdDelete,
+  MdDeleteForever,
+  MdDeleteSweep,
+} from "react-icons/md";
 import { AiFillDelete } from "react-icons/ai";
+import { FiRefreshCcw } from "react-icons/fi";
+import { VscDebugRestart } from "react-icons/vsc";
 
 function board_string_to_grid(board_string) {
   // Validate input length
@@ -225,6 +232,12 @@ function App() {
   const [solutionAttempts, setSolutionAttempts] = usePlayerState(
     me,
     "solutionAttempts",
+    0
+  );
+  const [successes, setSuccesses] = usePlayerState(me, "successes", 0);
+  const [successesWithAutoSolve, setSuccessesWithAutoSolve] = usePlayerState(
+    me,
+    "successesWithAutoSolve",
     0
   );
   const [forceUpdate, setForceUpdate] = useMultiplayerState("forceUpdate", 0);
@@ -318,6 +331,19 @@ function App() {
     setInitialGridState(initialGrid);
     setPersonalGridState(grid);
   }, [difficulty]);
+
+  useEffect(() => {
+    const lastPersonalGridState = history[history.length - 1];
+    const newPersonalState = autoSolve
+      ? solutionGridState
+      : lastPersonalGridState;
+
+    if (!lastPersonalGridState) {
+      return newPersonalState;
+    }
+
+    setPersonalGridState(newPersonalState);
+  }, [autoSolve]);
 
   useEffect(() => {
     if (isHost) {
@@ -417,7 +443,10 @@ function App() {
     }
 
     setMessage("Solution successful");
-
+    setSuccesses(successes + 1);
+    if (autoSolve) {
+      setSuccessesWithAutoSolve(successesWithAutoSolve + 1);
+    }
     setSucceeded(true);
   };
 
@@ -609,18 +638,18 @@ function App() {
                         const hasOther = typeof otherCharacter !== "undefined";
                         const hasTemp = typeof tempInputValue !== "undefined";
 
-                        const has = hasTemp && hasOther;
+                        const hasCharacter = hasTemp || hasOther;
+                        const hasUniqueCharacter =
+                          otherCharacter !== tempInputValue;
+                        const hasChange = hasCharacter && hasUniqueCharacter;
 
-                        console.log(tempInputValue, isEmpty, character);
+                        const shouldChange = !tempInputValue && isEmpty;
 
-                        if (!tempInputValue && isEmpty) {
+                        if (shouldChange) {
                           return;
                         }
 
-                        if (
-                          (hasOther && otherCharacter !== tempInputValue) ||
-                          (hasTemp && otherCharacter !== tempInputValue)
-                        ) {
+                        if (hasChange) {
                           handleInputChange(
                             gridIndex,
                             cellIndex,
@@ -692,7 +721,7 @@ function App() {
               disabled: false,
             })}
           >
-            <span className={buttonTextStyles()}>Clear errors</span>
+            <span className={buttonTextStyles()}>Clear</span>
             <AiFillDelete />
           </button>
         ) : (
@@ -700,16 +729,35 @@ function App() {
         )}
         {hasSolutionAttempts ? (
           <button
-            onClick={() => setSolutionAttempts(0)}
-            className="font-bold px-6 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors"
+            onClick={() => {
+              setSucceeded(false);
+              setSuccesses(0);
+              setSuccessesWithAutoSolve(0);
+              setSolutionAttempts(0);
+            }}
+            className={buttonStyles({
+              intent: "yellow",
+              disabled: false,
+            })}
           >
-            Clear attempts
+            <VscDebugRestart />
           </button>
         ) : (
           <></>
         )}
+        <button
+          onClick={() => setAutoSolve((prev) => !prev)}
+          className={buttonStyles({
+            intent: "gray",
+            disabled: false,
+          })}
+        >
+          <FaWandMagicSparkles />
+        </button>
       </div>
-      <div className="">{`Attempts made: ${solutionAttempts}`}</div>
+      <div className="">{`Score: ${
+        successesWithAutoSolve ? `*` : ``
+      }${successes}/${solutionAttempts}`}</div>
     </main>
   );
 }
