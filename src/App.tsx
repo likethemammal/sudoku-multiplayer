@@ -12,7 +12,7 @@ import {
   usePlayersList,
   usePlayersState,
 } from "playroomkit";
-import { FaCheck, FaMousePointer, FaStar } from "react-icons/fa";
+import { FaCheck, FaMousePointer, FaStar, FaWalking } from "react-icons/fa";
 import Tooltip from "@tippyjs/react";
 import "react-tippy/dist/tippy.css";
 
@@ -37,7 +37,14 @@ const tooltipItemsStyles = cva(
   "grid grid-cols-3 p-[0.4rem] pb-[0.5rem] bg-amber-200 border-2 border-x-amber-300 border-t-amber-100 border-b-amber-400 rounded-lg gap-2 shadow-xl"
 );
 const footerStyles = cva(
-  "min-h-[3rem] w-full self-end relative before:content-[' '] before:absolute before:inset-0 before:bg-amber-200 before:border-t-4 before:border-amber-100/60"
+  `
+  min-h-[1rem] w-full self-end relative
+  
+  before:content-[' ']
+  before:absolute before:inset-0
+  before:bg-teal-500
+  before:border-t-4 before:border-teal-300/80
+  `
 );
 const subgridStyles = cva("grid grid-cols-3 gap-1");
 const inputContainerStyles = cva("");
@@ -45,8 +52,334 @@ const inputBadgeStyles = cva(
   "absolute flex items-center justify-center z-10 rounded-full -translate-y-2/4 translate-x-2/4 w-8 h-8 top-0 right-0 bg-red-200"
 );
 const gridStyles = cva("bg-amber-200 p-[5px] rounded-lg shadow-xl");
+const buttonInnerStyles = cva(
+  `
+  flex gap-x-4
+  rounded-full
+
+  border-2
+
+`,
+  {
+    variants: {
+      intent: {
+        teal: `
+          bg-teal-800/30
+          border-teal-800/10
+          py-1 px-1
+      `,
+        transparent: `
+          border-transparent
+        `,
+        white: `
+        bg-white/30
+        border-white/40
+        py-2 px-4
+        `,
+      },
+    },
+    defaultVariants: {
+      intent: "white",
+    },
+  }
+);
+const buttonsStyles = cva(
+  `
+  grid gap-y-4
+`,
+  {
+    variants: {
+      intent: {
+        paper: `
+          border-4
+          bg-amber-100
+          border-amber-500/40
+          rounded-full
+          py-2 px-4
+        `,
+        transparent: ``,
+        teal: `
+          border-2
+          bg-teal-500/50
+          border-teal-700/10
+          rounded-xl
+          pb-4 pt-8 px-6
+          min-w-[20rem]
+        `,
+      },
+    },
+    defaultVariants: {
+      intent: "transparent",
+    },
+  }
+);
 const gridInnerStyles = cva(
   "grid grid-cols-3 gap-[0.4rem] min-[400px]:gap-[0.4rem] sm:gap-[0.4rem] bg-amber-800 p-[0.4rem] rounded-[3px]"
+);
+
+const iconButtonStyles = cva(
+  `
+  flex justify-center items-center font-bold 
+  w-12 h-12 rounded-full transition-colors
+  relative
+  overflow-hidden
+
+  before:rounded-full
+  before:-translate-y-1
+  before:content-[' ']
+  before:absolute before:inset-0
+  before:bg-white/20
+
+  
+
+  before:transition-transform
+  `,
+  {
+    variants: {
+      disabled: {
+        true: "",
+        false: `
+        hover:before:bg-white/10
+        hover:before:translate-y-0
+        active:scale-[1.02]
+        hover:scale-[0.99]
+        `,
+      },
+      hasBorder: {
+        true: `
+          border-[0.165rem] 
+        `,
+        false: ``,
+      },
+      active: {
+        true: `
+          scale-[0.99]
+          before:bg-transparent
+          before:translate-y-0
+        `,
+        false: ``,
+      },
+      dark: {
+        true: `
+          text-white/60
+          hover:text-white
+          hover:border-white
+        `,
+        false: `text-white`,
+      },
+      faded: {
+        true: `
+        text-white/60
+        opacity-60
+        border-white/90
+        hover:opacity-100
+        `,
+        false: ``,
+      },
+      outlined: {
+        true: `outline-4 outline outline-offset-0 `,
+        false: ``,
+      },
+      intent: {
+        gray: "",
+        blue: "",
+        green: "",
+        lime: "",
+        amber: "",
+        yellow: "",
+        orange: "",
+        red: "",
+        rose: "",
+        purple: "",
+        stone: "",
+      },
+      size: {
+        md: "text-xl",
+        lg: "text-2xl",
+      },
+    },
+    defaultVariants: {
+      intent: "blue",
+      size: "lg",
+      disabled: false,
+      hasBorder: true,
+      dark: false,
+      faded: false,
+      outlined: false,
+    },
+    compoundVariants: [
+      {
+        hasBorder: true,
+        dark: false,
+        className: `border-white`,
+      },
+      {
+        intent: "gray",
+        disabled: false,
+        className: "bg-slate-300 hover:text-slate-600 text-slate-500",
+      },
+      {
+        intent: "gray",
+        disabled: true,
+        className: "bg-slate-200 text-slate-400",
+      },
+      {
+        intent: "stone",
+        disabled: false,
+        className: "bg-stone-600",
+      },
+      {
+        intent: "stone",
+        disabled: true,
+        className: "bg-stone-300",
+      },
+      {
+        intent: "stone",
+        dark: true,
+        className: "border-stone-400",
+      },
+      {
+        intent: "blue",
+        disabled: false,
+        className: "bg-blue-600",
+      },
+      {
+        intent: "blue",
+        disabled: true,
+        className: "bg-blue-300",
+      },
+      {
+        intent: "blue",
+        dark: true,
+        className: "border-blue-400",
+      },
+      {
+        intent: "lime",
+        disabled: false,
+        className: "bg-lime-600",
+      },
+      {
+        intent: "lime",
+        disabled: true,
+        className: "bg-lime-600",
+      },
+      {
+        intent: "lime",
+        dark: true,
+        className: "border-lime-400",
+      },
+      {
+        intent: "yellow",
+        disabled: false,
+        className: "bg-yellow-600",
+      },
+      {
+        intent: "yellow",
+        disabled: true,
+        className: "bg-yellow-600",
+      },
+      {
+        intent: "yellow",
+        dark: true,
+        className: "border-yellow-400",
+      },
+      {
+        intent: "amber",
+        disabled: false,
+        className: "bg-amber-600",
+      },
+      {
+        intent: "amber",
+        disabled: true,
+        className: "bg-amber-600",
+      },
+      {
+        intent: "amber",
+        dark: true,
+        className: "border-amber-400",
+      },
+      {
+        intent: "green",
+        disabled: false,
+        className: "bg-green-600",
+      },
+      {
+        intent: "green",
+        disabled: true,
+        className: "bg-green-600",
+      },
+      {
+        intent: "green",
+        dark: true,
+        className: "border-green-400",
+      },
+      {
+        intent: "orange",
+        disabled: false,
+        className: "bg-orange-600",
+      },
+      {
+        intent: "orange",
+        disabled: true,
+        className: "bg-orange-600",
+      },
+      {
+        intent: "orange",
+        dark: true,
+        className: "border-orange-400",
+      },
+      {
+        intent: "red",
+        disabled: false,
+        className: "bg-red-600",
+      },
+      {
+        intent: "red",
+        disabled: true,
+        className: "bg-red-600",
+      },
+      {
+        intent: "red",
+        dark: true,
+        className: "border-red-400",
+      },
+      {
+        intent: "rose",
+        disabled: false,
+        className: "bg-rose-600",
+      },
+      {
+        intent: "rose",
+        disabled: true,
+        className: "bg-rose-600",
+      },
+      {
+        intent: "rose",
+        dark: true,
+        className: "border-rose-400",
+      },
+      {
+        intent: "purple",
+        outlined: true,
+        className: "outline-purple-600",
+      },
+      {
+        intent: "purple",
+        disabled: false,
+        className: "bg-purple-600",
+      },
+      {
+        intent: "purple",
+        disabled: true,
+        className: "bg-purple-600",
+      },
+      {
+        intent: "purple",
+        dark: true,
+        className: "border-purple-400",
+      },
+    ],
+  }
 );
 
 const buttonStyles = cva(
@@ -137,10 +470,19 @@ const inputStyles = cva(
     },
     compoundVariants: [
       {
+        selected: true,
+        className: "bg-amber-200",
+      },
+      {
+        selected: true,
+        wrong: true,
+        className: "bg-amber-200",
+      },
+      {
         selected: false,
         wrong: true,
         className:
-          "bg-red-200 border-x-red-200 border-t-red-100 border-b-red-300",
+          "bg-red-300 line-through text-red-800 border-x-red-300 border-t-red-200 border-b-red-400",
       },
       {
         isInitial: false,
@@ -161,7 +503,16 @@ const inputStyles = cva(
 
 import _ from "lodash";
 import { IoIosUndo } from "react-icons/io";
-import { FaDeleteLeft, FaWandMagicSparkles } from "react-icons/fa6";
+import {
+  FaBicycle,
+  FaCableCar,
+  FaCarSide,
+  FaDeleteLeft,
+  FaPlane,
+  FaRocket,
+  FaTruckPickup,
+  FaWandMagicSparkles,
+} from "react-icons/fa6";
 import { TiDelete } from "react-icons/ti";
 import { RiDeleteBack2Fill, RiRestartLine } from "react-icons/ri";
 import {
@@ -207,6 +558,31 @@ function board_string_to_grid(board_string) {
 
   return grid;
 }
+
+function DifficultyButtons({ difficulties, difficulty, setDifficulty }) {
+  return (
+    <div className={buttonInnerStyles()}>
+      {difficulties.map(({ value, color, Icon }) => {
+        const isActive = value === difficulty;
+
+        return (
+          <button
+            className={iconButtonStyles({
+              intent: color,
+              dark: false,
+              faded: !isActive,
+              disabled: isActive,
+            })}
+            onClick={() => setDifficulty(value)}
+          >
+            <Icon />
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
 function App() {
   // const ref = useRef();
   // const positionRef = useMousePosition();
@@ -506,26 +882,38 @@ function App() {
     {
       value: "easy",
       label: "🚗 Basic",
+      color: `green`,
+      Icon: FaWalking,
     },
     {
       value: "medium",
       label: "🚎 Intermediate",
+      color: `lime`,
+      Icon: FaBicycle,
     },
     {
       value: "hard",
       label: "🚄 Advanced",
+      color: `yellow`,
+      Icon: FaTruckPickup,
     },
     {
       value: "very-hard",
       label: "🚀 Expert",
+      color: `orange`,
+      Icon: FaCableCar,
     },
     {
       value: "insane",
       label: "☄ Guru",
+      color: `red`,
+      Icon: FaPlane,
     },
     {
       value: "inhuman",
       label: "🌌 Galaxy Brain",
+      color: `rose`,
+      Icon: FaRocket,
     },
   ];
 
@@ -552,24 +940,6 @@ function App() {
           </div>
         </h1>
 
-        <select
-          className={difficultyStyles()}
-          value={difficulty}
-          onChange={(ev) => {
-            setDifficulty(ev.target.value);
-          }}
-        >
-          <option value="" disabled selected>
-            Select difficulty
-          </option>
-          {difficulties.map(({ value, label }) => {
-            return (
-              <option className="" value={value}>
-                {label}
-              </option>
-            );
-          })}
-        </select>
         <div className={gridStyles()}>
           <div className={gridInnerStyles()}>
             {personalGridState.map((grid, gridIndex) => (
@@ -705,81 +1075,89 @@ function App() {
         </div>
 
         <div className="h-[1em]">{message}</div>
-        <div className="flex gap-x-4">
-          <button
-            disabled={succeeded}
-            onClick={checkSolution}
-            className={buttonStyles({
-              intent: succeeded ? "green" : "blue",
-              disabled: succeeded,
-            })}
-          >
-            {succeeded ? <FaStar /> : <FaCheck />}
-            <span className={buttonTextStyles()}>Submit</span>
-          </button>
-          <button
-            disabled={disabled_undo}
-            onClick={() => {
-              let newHistory = [...history];
-              newHistory.splice(newHistory.length - 1, 1);
+        {/* <div className={buttonsStyles()}></div> */}
+        <div className={buttonsStyles({})}>
+          <DifficultyButtons
+            setDifficulty={setDifficulty}
+            difficulties={difficulties}
+            difficulty={difficulty}
+          />
+          <div className={buttonInnerStyles({ intent: "transparent" })}>
+            <button
+              disabled={succeeded}
+              onClick={checkSolution}
+              className={iconButtonStyles({
+                intent: succeeded ? "green" : "blue",
+                disabled: succeeded,
+              })}
+            >
+              {succeeded ? <FaStar /> : <FaCheck />}
+            </button>
+            {!disabled_undo && (
+              <button
+                disabled={disabled_undo}
+                onClick={() => {
+                  let newHistory = [...history];
+                  newHistory.splice(newHistory.length - 1, 1);
 
-              setPersonalGridState(
-                history[history.length - 2] || initialGridState
-              );
-              setHistory(newHistory);
-            }}
-            className={buttonStyles({
-              disabled: disabled_undo,
-              icon: true,
-              intent: "gray",
-            })}
-          >
-            <IoIosUndo />
-          </button>
-          {hasWrongIndexes ? (
+                  setPersonalGridState(
+                    history[history.length - 2] || initialGridState
+                  );
+                  setHistory(newHistory);
+                }}
+                className={iconButtonStyles({
+                  disabled: disabled_undo,
+                  intent: "stone",
+                })}
+              >
+                <IoIosUndo />
+              </button>
+            )}
+            {hasWrongIndexes ? (
+              <button
+                onClick={() => {
+                  setWrongIndexes([]);
+                  setMessage("");
+                }}
+                className={iconButtonStyles({
+                  intent: "stone",
+                  disabled: false,
+                })}
+              >
+                <AiFillDelete />
+              </button>
+            ) : (
+              <></>
+            )}
+            {hasSolutionAttempts ? (
+              <button
+                onClick={() => {
+                  setSucceeded(false);
+                  setSuccesses(0);
+                  setSuccessesWithAutoSolve(0);
+                  setSolutionAttempts(0);
+                }}
+                className={iconButtonStyles({
+                  intent: "yellow",
+                  disabled: false,
+                })}
+              >
+                <VscDebugRestart />
+              </button>
+            ) : (
+              <></>
+            )}
             <button
-              onClick={() => {
-                setWrongIndexes([]);
-                setMessage("");
-              }}
-              className={buttonStyles({
-                intent: "yellow",
+              onClick={() => setAutoSolve((prev) => !prev)}
+              className={iconButtonStyles({
+                intent: autoSolve ? "purple" : "stone",
+                size: "md",
                 disabled: false,
               })}
             >
-              <span className={buttonTextStyles()}>Clear</span>
-              <AiFillDelete />
+              <FaWandMagicSparkles />
             </button>
-          ) : (
-            <></>
-          )}
-          {hasSolutionAttempts ? (
-            <button
-              onClick={() => {
-                setSucceeded(false);
-                setSuccesses(0);
-                setSuccessesWithAutoSolve(0);
-                setSolutionAttempts(0);
-              }}
-              className={buttonStyles({
-                intent: "yellow",
-                disabled: false,
-              })}
-            >
-              <VscDebugRestart />
-            </button>
-          ) : (
-            <></>
-          )}
-          <button
-            onClick={() => setAutoSolve((prev) => !prev)}
-            className={buttonStyles({
-              intent: "gray",
-              disabled: false,
-            })}
-          >
-            <FaWandMagicSparkles />
-          </button>
+          </div>
         </div>
         <div className="">{`Score: ${
           successesWithAutoSolve ? `*` : ``
