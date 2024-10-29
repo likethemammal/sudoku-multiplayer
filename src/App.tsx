@@ -12,19 +12,43 @@ import {
   usePlayersList,
   usePlayersState,
 } from "playroomkit";
-import { FaCheck, FaMousePointer, FaStar, FaWalking } from "react-icons/fa";
+import {
+  FaAngleDoubleRight,
+  FaCheck,
+  FaMousePointer,
+  FaStar,
+  FaWalking,
+} from "react-icons/fa";
 import Tooltip from "@tippyjs/react";
 import "react-tippy/dist/tippy.css";
+
+import gsap from "gsap";
 
 import Input from "./Input";
 
 const mainStyles = cva(
-  "h-screen flex flex-col items-center gap-y-6 max-sm:gap-y-4 pt-12 pb-[1rem] mx-auto"
+  "h-screen flex flex-col items-center gap-y-6 max-sm:gap-y-4 pt-12 pb-[4rem] mx-auto"
 );
 
 const messageStyles = cva(
-  "leading-[1em] min-h-[1em] text-lg font-semibold text-white"
+  `
+  leading-[1em] min-h-[1em]
+  text-lg font-semibold
+  px-4 py-2
+  bg-white text-teal-800
+  rounded-full
+  shadow-lg
+  `,
+  {
+    variants: {
+      visible: {
+        true: "",
+        false: "invisible",
+      },
+    },
+  }
 );
+const messageContainerStyles = cva("pb-2");
 const iconButtonText = cva("text-2xl");
 const bottomButtonStyles = cva(
   "w-full grid grid-cols-[auto_auto] space-between gap-x-4 max-sm:min-w-[20rem] min-w-[26rem]"
@@ -72,7 +96,20 @@ const inputContainerStyles = cva("");
 const inputBadgeStyles = cva(
   "absolute flex items-center justify-center z-10 rounded-full -translate-y-2/4 translate-x-2/4 w-8 h-8 top-0 right-0 bg-red-200"
 );
-const gridStyles = cva("bg-amber-200 relative p-[5px] rounded-lg shadow-xl");
+const gridStyles = cva(
+  "transition-colors relative p-[5px] rounded-lg shadow-xl",
+  {
+    variants: {
+      intent: {
+        none: "bg-amber-200",
+        success: "duration-[1000ms] bg-green-200",
+      },
+    },
+    defaultVariants: {
+      intent: "none",
+    },
+  }
+);
 const sideButtonsStyles = cva(
   `
   absolute left-0 -translate-x-full
@@ -168,7 +205,18 @@ const buttonsStyles = cva(
   }
 );
 const gridInnerStyles = cva(
-  "grid grid-cols-3 gap-[0.4rem] min-[400px]:gap-[0.4rem] sm:gap-[0.4rem] bg-amber-800 p-[0.4rem] rounded-[3px]"
+  "transition-colors grid grid-cols-3 gap-[0.4rem] min-[400px]:gap-[0.4rem] sm:gap-[0.4rem] p-[0.4rem] rounded-[3px]",
+  {
+    variants: {
+      intent: {
+        none: "bg-amber-800",
+        success: "duration-[2000ms] bg-green-800",
+      },
+    },
+    defaultVariants: {
+      intent: "none",
+    },
+  }
 );
 
 const iconButtonStyles = cva(
@@ -182,7 +230,7 @@ const iconButtonStyles = cva(
   before:-translate-y-1
   before:content-[' ']
   before:absolute before:inset-0
-  before:bg-white/20
+  before:bg-white/20 
 
   
 
@@ -564,10 +612,16 @@ const inputStyles = cva(
         true: "bg-amber-400 border-x-amber-400 border-t-amber-300 border-b-amber-600 text-amber-900 disabled:text-amber-900",
         false: "",
       },
-      wrong: {
-        true: "",
-        false: "",
+      status: {
+        wrong: "",
+        success: "",
+        none: "",
       },
+    },
+    defaultVariants: {
+      status: "none",
+      isInitial: false,
+      selected: false,
     },
     compoundVariants: [
       {
@@ -576,24 +630,36 @@ const inputStyles = cva(
       },
       {
         selected: true,
-        wrong: true,
+        status: "wrong",
         className: "bg-amber-200",
       },
       {
         selected: false,
-        wrong: true,
+        status: "wrong",
         className:
           "bg-red-300 line-through text-red-800 border-x-red-300 border-t-red-200 border-b-red-400",
       },
       {
         isInitial: false,
-        wrong: false,
+        status: "none",
         className:
           "bg-amber-200 border-x-amber-200 border-t-amber-100 border-b-amber-400",
       },
       {
         isInitial: false,
-        wrong: false,
+        status: "success",
+        className:
+          "pointer-events-none bg-green-500 border-x-green-500 border-t-green-400 border-b-green-600 text-green-200 disabled:text-green-900",
+      },
+      {
+        isInitial: true,
+        status: "success",
+        className:
+          "bg-green-600 border-x-green-600 border-t-green-500 border-b-green-700 text-green-800 disabled:text-green-800",
+      },
+      {
+        isInitial: false,
+        status: "none",
         selected: false,
         className:
           "hover:bg-amber-300 hover:border-x-amber-300 hover:border-t-amber-200 hover:border-b-amber-400",
@@ -678,7 +744,12 @@ function board_string_to_grid(board_string) {
   return grid;
 }
 
-function DifficultyButtons({ difficulties, difficulty, setDifficulty }) {
+function DifficultyButtons({
+  difficulties,
+  difficulty,
+  setDifficulty,
+  size = "lg",
+}) {
   return (
     <div
       className={buttonInnerStyles({
@@ -696,8 +767,8 @@ function DifficultyButtons({ difficulties, difficulty, setDifficulty }) {
               dark: false,
               faded: !isActive,
               disabled: isActive,
-              size: "lg",
-              iconSize: "lg",
+              size,
+              iconSize: size,
             })}
             onClick={() => setDifficulty(value)}
           >
@@ -817,6 +888,8 @@ function App() {
   //   addToHistory(personalGridState);
   // }, [personalGridState]);
 
+  const gridRef = useRef(null);
+
   useEffect(() => {
     if (!message) {
       return;
@@ -918,6 +991,15 @@ function App() {
     personalGridState
   );
 
+  function removeLastGridState() {
+    let newHistory = [...history];
+    newHistory.splice(newHistory.length - 1, 1);
+
+    setHistory(newHistory);
+
+    return newHistory;
+  }
+
   // Check if the solution is valid
   const checkSolution = () => {
     if (succeeded) {
@@ -963,7 +1045,10 @@ function App() {
       return;
     }
 
-    setMessage("Solution successful");
+    setHistory([...history, solutionGridState]);
+    setWrongIndexes([]);
+    setAutoSolve(false);
+    setMessage("Success! 🙌");
     setSuccesses(successes + 1);
     if (autoSolve) {
       setSuccessesWithAutoSolve(successesWithAutoSolve + 1);
@@ -1078,7 +1163,10 @@ function App() {
           />
         </div>
 
-        <div className={gridStyles()}>
+        <div
+          ref={gridRef}
+          className={gridStyles({ intent: succeeded ? "success" : "none" })}
+        >
           <div className={sideButtonsStyles()}>
             {hasSolutionAttempts && (
               <button
@@ -1101,7 +1189,11 @@ function App() {
               successesWithAutoSolve ? `*` : ``
             }${successes} / ${solutionAttempts}`}</div>
           </div>
-          <div className={gridInnerStyles()}>
+          <div
+            className={gridInnerStyles({
+              intent: succeeded ? "success" : "none",
+            })}
+          >
             {personalGridState.map((grid, gridIndex) => (
               <div key={gridIndex} className={subgridStyles()}>
                 {grid.map((character, cellIndex) => {
@@ -1153,8 +1245,16 @@ function App() {
 
                   const isWrong = !!wrongIndexes.includes(index);
 
+                  const numCellsPerSubGrid = 3;
+                  const delayInterval = 0.02;
+
                   return (
                     <Input
+                      delay={
+                        (gridIndex * numCellsPerSubGrid + (cellIndex + 1)) *
+                        delayInterval
+                      }
+                      succeeded={succeeded}
                       tooltipProps={{
                         content: getTooltipContent(
                           gridIndex,
@@ -1165,7 +1265,11 @@ function App() {
                       }}
                       inputProps={{
                         className: inputStyles({
-                          wrong: isWrong,
+                          status: isWrong
+                            ? "wrong"
+                            : succeeded
+                            ? "success"
+                            : "none",
                           isInitial,
                           selected,
                         }),
@@ -1224,71 +1328,75 @@ function App() {
         <div className={buttonsStyles({})}>
           <div className={bottomButtonStyles({})}>
             <div className={buttonGroupStyles({})}>
-              {!disabled_undo && (
-                <button
-                  disabled={disabled_undo}
-                  onClick={() => {
-                    let newHistory = [...history];
-                    newHistory.splice(newHistory.length - 1, 1);
+              {!succeeded && (
+                <>
+                  {!disabled_undo && (
+                    <button
+                      disabled={disabled_undo}
+                      onClick={() => {
+                        const newHistory = removeLastGridState();
 
-                    const lastPersonalGridState = history[history.length - 2];
-                    const newPersonalState =
-                      lastPersonalGridState || initialGridState;
-                    if (lastPersonalGridState || newHistory.length) {
-                      setHasChanges(true);
-                    } else {
-                      setHasChanges(false);
-                    }
+                        const lastPersonalGridState =
+                          history[history.length - 2];
+                        const newPersonalState =
+                          lastPersonalGridState || initialGridState;
+                        if (lastPersonalGridState || newHistory.length) {
+                          setHasChanges(true);
+                        } else {
+                          setHasChanges(false);
+                        }
 
-                    setPersonalGridState(newPersonalState);
-                    setHistory(newHistory);
-                  }}
-                  className={iconButtonStyles({
-                    disabled: disabled_undo,
-                    intent: "gray",
-                  })}
-                >
-                  <IoIosUndo />
-                </button>
-              )}
-              {hasChanges && (
-                <button
-                  onClick={() => {
-                    setHasChanges(false);
-                    setAutoSolve(false);
-                    setHistory([...history, initialGridState]);
-                    setPersonalGridState(initialGridState);
-                  }}
-                  className={iconButtonStyles({
-                    intent: "sand",
-                  })}
-                >
-                  <MdDelete />
-                </button>
-              )}
-              {hasWrongIndexes && (
-                <button
-                  onClick={() => {
-                    setWrongIndexes([]);
-                    setMessage("");
-                  }}
-                  className={iconButtonStyles({
-                    intent: "pink",
-                    disabled: false,
-                    dark: false,
-                  })}
-                >
-                  <FaBan />
-                </button>
+                        setPersonalGridState(newPersonalState);
+                      }}
+                      className={iconButtonStyles({
+                        disabled: disabled_undo,
+                        intent: "gray",
+                      })}
+                    >
+                      <IoIosUndo />
+                    </button>
+                  )}
+                  {hasChanges && (
+                    <button
+                      onClick={() => {
+                        setHasChanges(false);
+                        setAutoSolve(false);
+                        setHistory([...history, initialGridState]);
+                        setPersonalGridState(initialGridState);
+                      }}
+                      className={iconButtonStyles({
+                        intent: "sand",
+                      })}
+                    >
+                      <MdDelete />
+                    </button>
+                  )}
+                  {hasWrongIndexes && (
+                    <button
+                      onClick={() => {
+                        setWrongIndexes([]);
+                        setMessage("");
+                      }}
+                      className={iconButtonStyles({
+                        intent: "pink",
+                        disabled: false,
+                        dark: false,
+                      })}
+                    >
+                      <FaBan />
+                    </button>
+                  )}
+                </>
               )}
             </div>
             <div className={buttonGroupStyles({ side: "right" })}>
               <button
+                disabled={succeeded}
                 onClick={() => setAutoSolve((prev) => !prev)}
                 className={iconButtonStyles({
                   intent: autoSolve ? "purple" : "gray",
                   iconSize: "md",
-                  disabled: false,
+                  disabled: succeeded,
                 })}
               >
                 <FaWandMagicSparkles />
@@ -1301,12 +1409,14 @@ function App() {
                   disabled: succeeded,
                 })}
               >
-                {succeeded ? <FaStar /> : <FaCheck />}
+                {succeeded ? <FaAngleDoubleRight /> : <FaCheck />}
               </button>
             </div>
           </div>
         </div>
-        <div className={messageStyles()}>{message}</div>
+        <div className={messageContainerStyles()}>
+          <div className={messageStyles({ visible: !!message })}>{message}</div>
+        </div>
         <footer className={footerStyles()}></footer>
       </main>
     </>
