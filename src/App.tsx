@@ -17,7 +17,7 @@ import Tooltip from "@tippyjs/react";
 import "react-tippy/dist/tippy.css";
 
 const mainStyles = cva(
-  "flex flex-col items-center gap-y-6 pt-12 pb-8 max-w-[1280px] mx-auto"
+  "h-screen flex flex-col items-center gap-y-6 pt-12 mx-auto justify-between"
 );
 
 const buttonTextStyles = cva("text-lg");
@@ -29,6 +29,26 @@ const playerSlotsStyles = cva("flex flex-row items-center gap-x-1 pt-2");
 const difficultyStyles = cva(
   "w-48 rounded border-2 border-slate-300 px-3 py-2"
 );
+
+const tooltipItemStyles = cva(
+  "w-8 h-8 border-2 border-x-amber-400 border-t-amber-400 border-b-amber-500 bg-amber-400 font-bold rounded flex items-center justify-center cursor-pointer hover:bg-amber-400"
+);
+const tooltipItemsStyles = cva(
+  "grid grid-cols-3 p-[0.4rem] pb-[0.5rem] bg-amber-200 border-2 border-x-amber-300 border-t-amber-100 border-b-amber-400 rounded-lg gap-2 shadow-xl"
+);
+const footerStyles = cva(
+  "min-h-[3rem] w-full self-end relative before:content-[' '] before:absolute before:inset-0 before:bg-amber-200 before:border-t-4 before:border-amber-100/60"
+);
+const subgridStyles = cva("grid grid-cols-3 gap-1");
+const inputContainerStyles = cva("");
+const inputBadgeStyles = cva(
+  "absolute flex items-center justify-center z-10 rounded-full -translate-y-2/4 translate-x-2/4 w-8 h-8 top-0 right-0 bg-red-200"
+);
+const gridStyles = cva("bg-amber-200 p-[5px] rounded-lg shadow-xl");
+const gridInnerStyles = cva(
+  "grid grid-cols-3 gap-[0.4rem] min-[400px]:gap-[0.4rem] sm:gap-[0.4rem] bg-amber-800 p-[0.4rem] rounded-[3px]"
+);
+
 const buttonStyles = cva(
   "flex text-xl items-center gap-x-2 font-bold px-6 py-2 rounded-lg transition-colors",
   {
@@ -41,7 +61,7 @@ const buttonStyles = cva(
         gray: "",
         blue: "text-white",
         green:
-          "text-white  outline bg-green-600 outline-4 outline-offset-2 outline-green-600",
+          "text-white outline bg-green-600 outline-4 outline-offset-2 outline-green-600",
         yellow: "text-white",
       },
       icon: {
@@ -97,23 +117,9 @@ const buttonStyles = cva(
     ],
   }
 );
-const tooltipItemStyles = cva(
-  "w-8 h-8 border-2 border-slate-300 bg-slate-100 font-bold rounded flex items-center justify-center cursor-pointer hover:bg-slate-200"
-);
-const tooltipItemsStyles = cva(
-  "grid grid-cols-3 p-3 bg-white rounded-xl gap-2 shadow-xl"
-);
-const subgridStyles = cva("grid grid-cols-3 gap-2");
-const inputContainerStyles = cva("");
-const inputBadgeStyles = cva(
-  "absolute flex items-center justify-center z-10 rounded-full -translate-y-2/4 translate-x-2/4 w-8 h-8 top-0 right-0 bg-red-200"
-);
-const gridStyles = cva(
-  "grid grid-cols-3 gap-4 min-[400px]:gap-6 sm:gap-5 bg-white p-6 rounded-lg shadow-xl border border-slate-200"
-);
 
 const inputStyles = cva(
-  "transition-colors w-7 h-7 sm:w-10 sm:h-10 text-lg font-bold border-2 text-center relative focus:outline-none focus:border-blue-500",
+  "transition-colors w-7 h-7 sm:w-10 sm:h-10 text-lg font-bold border-2 rounded-[3px] text-center relative outline outline-4 -outline-offset-2 outline-transparent",
   {
     variants: {
       selected: {
@@ -121,7 +127,7 @@ const inputStyles = cva(
         false: "",
       },
       isInitial: {
-        true: "bg-slate-100 border-slate-200 text-slate-700 disabled:text-slate-700",
+        true: "bg-amber-400 border-x-amber-400 border-t-amber-300 border-b-amber-600 text-amber-900 disabled:text-amber-900",
         false: "",
       },
       wrong: {
@@ -133,12 +139,21 @@ const inputStyles = cva(
       {
         selected: false,
         wrong: true,
-        className: "bg-red-200 border-red-300",
+        className:
+          "bg-red-200 border-x-red-200 border-t-red-100 border-b-red-300",
       },
       {
         isInitial: false,
         wrong: false,
-        className: "bg-white border-slate-300",
+        className:
+          "bg-amber-200 border-x-amber-200 border-t-amber-100 border-b-amber-400",
+      },
+      {
+        isInitial: false,
+        wrong: false,
+        selected: false,
+        className:
+          "hover:bg-amber-300 hover:border-x-amber-300 hover:border-t-amber-200 hover:border-b-amber-400",
       },
     ],
   }
@@ -515,250 +530,263 @@ function App() {
   ];
 
   return (
-    <main className={mainStyles()}>
-      <h1 className="grid justify-center">
-        <span className="text-6xl font-bold">Sudoku</span>
-        <span className="text-2xl font-bold">Multiplayer</span>
-        <div className={mouseSlotStyles()}>
-          {playerSlots.map((player, i) => (
-            <div
-              key={i}
-              className={mouseStyles()}
-              style={{
-                // left: `${player?.state?.pos?.x * width}px`,
-                // top: `${player?.state?.pos?.y * height}px`,
-                color: player?.state?.profile?.color,
-              }}
-            >
-              <FaMousePointer />
-            </div>
-          ))}
-        </div>
-      </h1>
-
-      <select
-        className={difficultyStyles()}
-        value={difficulty}
-        onChange={(ev) => {
-          setDifficulty(ev.target.value);
-        }}
-      >
-        <option value="" disabled selected>
-          Select difficulty
-        </option>
-        {difficulties.map(({ value, label }) => {
-          return (
-            <option className="" value={value}>
-              {label}
-            </option>
-          );
-        })}
-      </select>
-      <div className={gridStyles()}>
-        {personalGridState.map((grid, gridIndex) => (
-          <div key={gridIndex} className={subgridStyles()}>
-            {grid.map((character, cellIndex) => {
-              const isEmptyForMe = character === ".";
-
-              const { state: otherPlayerGridState, player: otherPlayer } =
-                isEmptyForMe
-                  ? otherGridStates.find(({ state: otherGridState }) => {
-                      return otherGridState?.[gridIndex]?.[cellIndex] !== ".";
-                    }) || {}
-                  : {};
-
-              const otherCharacter =
-                otherPlayerGridState?.[gridIndex]?.[cellIndex];
-
-              const isOther = !!otherCharacter;
-
-              const otherColor = isOther ? otherColors[otherPlayer?.id] : "";
-
-              const isEmpty = isEmptyForMe && !otherCharacter;
-
-              const isInitial = initialGridState[gridIndex][cellIndex] !== ".";
-
-              const index = `${gridIndex}${cellIndex}`;
-
-              const selected = selectedIndexes.includes(index);
-
-              const storedValue = isOther
-                ? otherCharacter
-                : isEmpty
-                ? ""
-                : character;
-
-              const isSelectedIndex =
-                hasSelectedIndex && selectedIndex === index;
-              const value = isSelectedIndex ? tempInputValue : storedValue;
-
-              const { player: selectedPlayer } = selected
-                ? selectedIndexesWithState.find(({ state }) => {
-                    return state === index;
-                  })
-                : {};
-              const position = getCellPosition(gridIndex, cellIndex);
-
-              const isWrong = !!wrongIndexes.includes(index);
-
-              return (
-                <div className={inputContainerStyles()}>
-                  {/* <div className={inputBadgeStyles()}>{index}</div> */}
-                  <Tooltip
-                    // ref={tippyRef}
-                    content={getTooltipContent(
-                      gridIndex,
-                      cellIndex,
-                      character,
-                      isInitial
-                    )}
-                    duration={[200, 100]}
-                    trigger="focusin"
-                    animation="fade"
-                    arrow={true}
-                    theme="light"
-                    interactive={true}
-                  >
-                    <input
-                      key={index}
-                      type="tel"
-                      maxLength="1"
-                      className={inputStyles({
-                        wrong: isWrong,
-                        isInitial,
-                        selected,
-                      })}
-                      style={{
-                        borderColor: selectedPlayer?.state?.profile?.color,
-                        color: isSelectedIndex ? null : otherColor || null,
-                      }}
-                      onBlur={() => {
-                        setSelectedIndex(false);
-
-                        const hasOther = typeof otherCharacter !== "undefined";
-                        const hasTemp = typeof tempInputValue !== "undefined";
-
-                        const hasCharacter = hasTemp || hasOther;
-                        const hasUniqueCharacter =
-                          otherCharacter !== tempInputValue;
-                        const hasChange = hasCharacter && hasUniqueCharacter;
-
-                        const shouldChange = !tempInputValue && isEmpty;
-
-                        if (shouldChange) {
-                          return;
-                        }
-
-                        if (hasChange) {
-                          handleInputChange(
-                            gridIndex,
-                            cellIndex,
-                            tempInputValue
-                          );
-                        }
-
-                        setTempInputValue("");
-                      }}
-                      onFocus={() => {
-                        setSelectedIndex(index);
-                        setTempInputValue(value);
-                      }}
-                      value={value}
-                      onChange={(e) => {
-                        setTempInputValue(e.target.value);
-                        // handleClose();
-                      }}
-                      disabled={isInitial}
-                    />
-                  </Tooltip>
-                </div>
-              );
-            })}
+    <>
+      <main className={mainStyles()}>
+        <h1 className="grid justify-center font-sans">
+          <span className="text-6xl font-bold">Sudoku</span>
+          <span className="text-2xl font-bold">Multiplayer</span>
+          <div className={mouseSlotStyles()}>
+            {playerSlots.map((player, i) => (
+              <div
+                key={i}
+                className={mouseStyles()}
+                style={{
+                  // left: `${player?.state?.pos?.x * width}px`,
+                  // top: `${player?.state?.pos?.y * height}px`,
+                  color: player?.state?.profile?.color,
+                }}
+              >
+                <FaMousePointer />
+              </div>
+            ))}
           </div>
-        ))}
-      </div>
+        </h1>
 
-      <div className="h-[1em]">{message}</div>
-      <div className="flex gap-x-4">
-        <button
-          disabled={succeeded}
-          onClick={checkSolution}
-          className={buttonStyles({
-            intent: succeeded ? "green" : "blue",
-            disabled: succeeded,
-          })}
-        >
-          {succeeded ? <FaStar /> : <FaCheck />}
-          <span className={buttonTextStyles()}>Submit</span>
-        </button>
-        <button
-          disabled={disabled_undo}
-          onClick={() => {
-            let newHistory = [...history];
-            newHistory.splice(newHistory.length - 1, 1);
-
-            setPersonalGridState(
-              history[history.length - 2] || initialGridState
-            );
-            setHistory(newHistory);
+        <select
+          className={difficultyStyles()}
+          value={difficulty}
+          onChange={(ev) => {
+            setDifficulty(ev.target.value);
           }}
-          className={buttonStyles({
-            disabled: disabled_undo,
-            icon: true,
-            intent: "gray",
-          })}
         >
-          <IoIosUndo />
-        </button>
-        {hasWrongIndexes ? (
+          <option value="" disabled selected>
+            Select difficulty
+          </option>
+          {difficulties.map(({ value, label }) => {
+            return (
+              <option className="" value={value}>
+                {label}
+              </option>
+            );
+          })}
+        </select>
+        <div className={gridStyles()}>
+          <div className={gridInnerStyles()}>
+            {personalGridState.map((grid, gridIndex) => (
+              <div key={gridIndex} className={subgridStyles()}>
+                {grid.map((character, cellIndex) => {
+                  const isEmptyForMe = character === ".";
+
+                  const { state: otherPlayerGridState, player: otherPlayer } =
+                    isEmptyForMe
+                      ? otherGridStates.find(({ state: otherGridState }) => {
+                          return (
+                            otherGridState?.[gridIndex]?.[cellIndex] !== "."
+                          );
+                        }) || {}
+                      : {};
+
+                  const otherCharacter =
+                    otherPlayerGridState?.[gridIndex]?.[cellIndex];
+
+                  const isOther = !!otherCharacter;
+
+                  const otherColor = isOther
+                    ? otherColors[otherPlayer?.id]
+                    : "";
+
+                  const isEmpty = isEmptyForMe && !otherCharacter;
+
+                  const isInitial =
+                    initialGridState[gridIndex][cellIndex] !== ".";
+
+                  const index = `${gridIndex}${cellIndex}`;
+
+                  const selected = selectedIndexes.includes(index);
+
+                  const storedValue = isOther
+                    ? otherCharacter
+                    : isEmpty
+                    ? ""
+                    : character;
+
+                  const isSelectedIndex =
+                    hasSelectedIndex && selectedIndex === index;
+                  const value = isSelectedIndex ? tempInputValue : storedValue;
+
+                  const { player: selectedPlayer } = selected
+                    ? selectedIndexesWithState.find(({ state }) => {
+                        return state === index;
+                      })
+                    : {};
+                  const position = getCellPosition(gridIndex, cellIndex);
+
+                  const isWrong = !!wrongIndexes.includes(index);
+
+                  return (
+                    <div className={inputContainerStyles()}>
+                      {/* <div className={inputBadgeStyles()}>{index}</div> */}
+                      <Tooltip
+                        // ref={tippyRef}
+                        content={getTooltipContent(
+                          gridIndex,
+                          cellIndex,
+                          character,
+                          isInitial
+                        )}
+                        duration={[200, 100]}
+                        trigger="focusin"
+                        animation="fade"
+                        arrow={true}
+                        theme="light"
+                        interactive={true}
+                      >
+                        <input
+                          key={index}
+                          type="tel"
+                          maxLength="1"
+                          className={inputStyles({
+                            wrong: isWrong,
+                            isInitial,
+                            selected,
+                          })}
+                          style={{
+                            outlineColor: selectedPlayer?.state?.profile?.color,
+                            color: isSelectedIndex ? null : otherColor || null,
+                          }}
+                          onBlur={() => {
+                            setSelectedIndex(false);
+
+                            const hasOther =
+                              typeof otherCharacter !== "undefined";
+                            const hasTemp =
+                              typeof tempInputValue !== "undefined";
+
+                            const hasCharacter = hasTemp || hasOther;
+                            const hasUniqueCharacter =
+                              otherCharacter !== tempInputValue;
+                            const hasChange =
+                              hasCharacter && hasUniqueCharacter;
+
+                            const shouldChange = !tempInputValue && isEmpty;
+
+                            if (shouldChange) {
+                              return;
+                            }
+
+                            if (hasChange) {
+                              handleInputChange(
+                                gridIndex,
+                                cellIndex,
+                                tempInputValue
+                              );
+                            }
+
+                            setTempInputValue("");
+                          }}
+                          onFocus={() => {
+                            setSelectedIndex(index);
+                            setTempInputValue(value);
+                          }}
+                          value={value}
+                          onChange={(e) => {
+                            setTempInputValue(e.target.value);
+                            // handleClose();
+                          }}
+                          disabled={isInitial}
+                        />
+                      </Tooltip>
+                    </div>
+                  );
+                })}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="h-[1em]">{message}</div>
+        <div className="flex gap-x-4">
           <button
+            disabled={succeeded}
+            onClick={checkSolution}
+            className={buttonStyles({
+              intent: succeeded ? "green" : "blue",
+              disabled: succeeded,
+            })}
+          >
+            {succeeded ? <FaStar /> : <FaCheck />}
+            <span className={buttonTextStyles()}>Submit</span>
+          </button>
+          <button
+            disabled={disabled_undo}
             onClick={() => {
-              setWrongIndexes([]);
-              setMessage("");
+              let newHistory = [...history];
+              newHistory.splice(newHistory.length - 1, 1);
+
+              setPersonalGridState(
+                history[history.length - 2] || initialGridState
+              );
+              setHistory(newHistory);
             }}
             className={buttonStyles({
-              intent: "yellow",
+              disabled: disabled_undo,
+              icon: true,
+              intent: "gray",
+            })}
+          >
+            <IoIosUndo />
+          </button>
+          {hasWrongIndexes ? (
+            <button
+              onClick={() => {
+                setWrongIndexes([]);
+                setMessage("");
+              }}
+              className={buttonStyles({
+                intent: "yellow",
+                disabled: false,
+              })}
+            >
+              <span className={buttonTextStyles()}>Clear</span>
+              <AiFillDelete />
+            </button>
+          ) : (
+            <></>
+          )}
+          {hasSolutionAttempts ? (
+            <button
+              onClick={() => {
+                setSucceeded(false);
+                setSuccesses(0);
+                setSuccessesWithAutoSolve(0);
+                setSolutionAttempts(0);
+              }}
+              className={buttonStyles({
+                intent: "yellow",
+                disabled: false,
+              })}
+            >
+              <VscDebugRestart />
+            </button>
+          ) : (
+            <></>
+          )}
+          <button
+            onClick={() => setAutoSolve((prev) => !prev)}
+            className={buttonStyles({
+              intent: "gray",
               disabled: false,
             })}
           >
-            <span className={buttonTextStyles()}>Clear</span>
-            <AiFillDelete />
+            <FaWandMagicSparkles />
           </button>
-        ) : (
-          <></>
-        )}
-        {hasSolutionAttempts ? (
-          <button
-            onClick={() => {
-              setSucceeded(false);
-              setSuccesses(0);
-              setSuccessesWithAutoSolve(0);
-              setSolutionAttempts(0);
-            }}
-            className={buttonStyles({
-              intent: "yellow",
-              disabled: false,
-            })}
-          >
-            <VscDebugRestart />
-          </button>
-        ) : (
-          <></>
-        )}
-        <button
-          onClick={() => setAutoSolve((prev) => !prev)}
-          className={buttonStyles({
-            intent: "gray",
-            disabled: false,
-          })}
-        >
-          <FaWandMagicSparkles />
-        </button>
-      </div>
-      <div className="">{`Score: ${
-        successesWithAutoSolve ? `*` : ``
-      }${successes}/${solutionAttempts}`}</div>
-    </main>
+        </div>
+        <div className="">{`Score: ${
+          successesWithAutoSolve ? `*` : ``
+        }${successes}/${solutionAttempts}`}</div>
+        <footer className={footerStyles()}></footer>
+      </main>
+    </>
   );
 }
 
