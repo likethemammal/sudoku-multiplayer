@@ -16,6 +16,8 @@ import { FaCheck, FaMousePointer, FaStar, FaWalking } from "react-icons/fa";
 import Tooltip from "@tippyjs/react";
 import "react-tippy/dist/tippy.css";
 
+import Input from "./Input";
+
 const mainStyles = cva(
   "h-screen flex flex-col items-center gap-y-6 max-sm:gap-y-4 pt-12 pb-[1rem] mx-auto"
 );
@@ -1152,79 +1154,65 @@ function App() {
                   const isWrong = !!wrongIndexes.includes(index);
 
                   return (
-                    <div className={inputContainerStyles()}>
-                      {/* <div className={inputBadgeStyles()}>{index}</div> */}
-                      <Tooltip
-                        // ref={tippyRef}
-                        content={getTooltipContent(
+                    <Input
+                      tooltipProps={{
+                        content: getTooltipContent(
                           gridIndex,
                           cellIndex,
                           character,
                           isInitial
-                        )}
-                        duration={[200, 100]}
-                        trigger="focusin"
-                        animation="fade"
-                        arrow={true}
-                        theme="light"
-                        interactive={true}
-                      >
-                        <input
-                          key={index}
-                          type="tel"
-                          maxLength="1"
-                          className={inputStyles({
-                            wrong: isWrong,
-                            isInitial,
-                            selected,
-                          })}
-                          style={{
-                            outlineColor: selectedPlayer?.state?.profile?.color,
-                            color: isSelectedIndex ? null : otherColor || null,
-                          }}
-                          onBlur={() => {
-                            setSelectedIndex(false);
+                        ),
+                      }}
+                      inputProps={{
+                        className: inputStyles({
+                          wrong: isWrong,
+                          isInitial,
+                          selected,
+                        }),
+                        style: {
+                          outlineColor: selectedPlayer?.state?.profile?.color,
+                          color: isSelectedIndex ? null : otherColor || null,
+                        },
+                        onBlur: () => {
+                          setSelectedIndex(false);
 
-                            const hasOther =
-                              typeof otherCharacter !== "undefined";
-                            const hasTemp =
-                              typeof tempInputValue !== "undefined";
+                          const hasOther =
+                            typeof otherCharacter !== "undefined";
+                          const hasTemp = typeof tempInputValue !== "undefined";
 
-                            const hasCharacter = hasTemp || hasOther;
-                            const hasUniqueCharacter =
-                              otherCharacter !== tempInputValue;
-                            const hasChange =
-                              hasCharacter && hasUniqueCharacter;
+                          const hasCharacter = hasTemp || hasOther;
+                          const hasUniqueCharacter =
+                            otherCharacter !== tempInputValue;
+                          const hasChange = hasCharacter && hasUniqueCharacter;
 
-                            const shouldChange = !tempInputValue && isEmpty;
+                          const shouldChange = !tempInputValue && isEmpty;
 
-                            if (shouldChange) {
-                              return;
-                            }
+                          if (shouldChange) {
+                            return;
+                          }
 
-                            if (hasChange) {
-                              handleInputChange(
-                                gridIndex,
-                                cellIndex,
-                                tempInputValue
-                              );
-                            }
+                          if (hasChange) {
+                            handleInputChange(
+                              gridIndex,
+                              cellIndex,
+                              tempInputValue
+                            );
+                          }
 
-                            setTempInputValue("");
-                          }}
-                          onFocus={() => {
-                            setSelectedIndex(index);
-                            setTempInputValue(value);
-                          }}
-                          value={value}
-                          onChange={(e) => {
-                            setTempInputValue(e.target.value);
-                            // handleClose();
-                          }}
-                          disabled={isInitial}
-                        />
-                      </Tooltip>
-                    </div>
+                          setTempInputValue("");
+                        },
+                        onFocus: () => {
+                          setSelectedIndex(index);
+                          setTempInputValue(value);
+                        },
+                        onChange: (e) => {
+                          setTempInputValue(e.target.value);
+                          // handleClose();
+                        },
+                        value,
+                        disabled: isInitial,
+                      }}
+                    />
                   );
                 })}
               </div>
