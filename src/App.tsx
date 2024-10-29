@@ -77,6 +77,7 @@ const sideButtonsStyles = cva(
   px-6
   grid justify-items-center
   gap-y-2
+  opacity-0
   `
 );
 const sideButtonsTextStyles = cva("text-white font-bold ");
