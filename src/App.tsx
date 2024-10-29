@@ -17,11 +17,30 @@ import Tooltip from "@tippyjs/react";
 import "react-tippy/dist/tippy.css";
 
 const mainStyles = cva(
-  "h-screen flex flex-col items-center gap-y-6 pt-12 mx-auto justify-between"
+  "h-screen flex flex-col items-center gap-y-6 max-sm:gap-y-4 pt-12 pb-[1rem] mx-auto"
 );
 
-const buttonTextStyles = cva("text-lg");
-const mouseStyles = cva("w-2 h-4 text-1xl text-slate-300");
+const messageStyles = cva(
+  "leading-[1em] min-h-[1em] text-lg font-semibold text-white"
+);
+const iconButtonText = cva("text-2xl");
+const bottomButtonStyles = cva(
+  "w-full grid grid-cols-[auto_auto] space-between gap-x-4 max-sm:min-w-[20rem] min-w-[26rem]"
+);
+const buttonGroupStyles = cva("flex gap-x-4", {
+  variants: {
+    side: {
+      right: "justify-self-end",
+      left: "",
+    },
+  },
+  defaultVariants: {
+    side: "left",
+  },
+});
+const mouseStyles = cva(
+  "w-4 h-4 shadow border-white border-2 bg-white/70 rounded text-1xl text-slate-300"
+);
 const mouseSlotStyles = cva("flex flex-row items-center gap-x-2 pt-2");
 const playerSlotStyles = cva("w-4 h-4 border-2 border-slate-300");
 const playerSlotsStyles = cva("flex flex-row items-center gap-x-1 pt-2");
@@ -38,7 +57,7 @@ const tooltipItemsStyles = cva(
 );
 const footerStyles = cva(
   `
-  min-h-[1rem] w-full self-end relative
+  min-h-[1rem] w-full self-end fixed bottom-0
   
   before:content-[' ']
   before:absolute before:inset-0
@@ -51,10 +70,19 @@ const inputContainerStyles = cva("");
 const inputBadgeStyles = cva(
   "absolute flex items-center justify-center z-10 rounded-full -translate-y-2/4 translate-x-2/4 w-8 h-8 top-0 right-0 bg-red-200"
 );
-const gridStyles = cva("bg-amber-200 p-[5px] rounded-lg shadow-xl");
+const gridStyles = cva("bg-amber-200 relative p-[5px] rounded-lg shadow-xl");
+const sideButtonsStyles = cva(
+  `
+  absolute left-0 -translate-x-full
+  px-6
+  grid justify-items-center
+  gap-y-2
+  `
+);
+const sideButtonsTextStyles = cva("text-white font-bold ");
 const buttonInnerStyles = cva(
   `
-  flex gap-x-4
+  flex
   rounded-full
 
   border-2
@@ -66,7 +94,7 @@ const buttonInnerStyles = cva(
         teal: `
           bg-teal-800/30
           border-teal-800/10
-          py-1 px-1
+          
       `,
         transparent: `
           border-transparent
@@ -74,18 +102,41 @@ const buttonInnerStyles = cva(
         white: `
         bg-white/30
         border-white/40
-        py-2 px-4
         `,
+      },
+      density: {
+        reg: `gap-x-4`,
+        compact: `gap-x-2 py-1`,
       },
     },
     defaultVariants: {
       intent: "white",
+      density: "reg",
     },
+    compoundVariants: [
+      {
+        density: "reg",
+        intent: "white",
+        className: `py-2 px-4`,
+      },
+      {
+        density: "compact",
+        intent: "white",
+        className: `px-2`,
+      },
+      {
+        density: "compact",
+        intent: "teal",
+        className: `px-1`,
+      },
+    ],
   }
 );
 const buttonsStyles = cva(
   `
   grid gap-y-4
+  w-full
+  justify-center
 `,
   {
     variants: {
@@ -120,7 +171,7 @@ const gridInnerStyles = cva(
 const iconButtonStyles = cva(
   `
   flex justify-center items-center font-bold 
-  w-12 h-12 rounded-full transition-colors
+  rounded-full transition-colors
   relative
   overflow-hidden
 
@@ -171,7 +222,6 @@ const iconButtonStyles = cva(
         true: `
         text-white/60
         opacity-60
-        border-white/90
         hover:opacity-100
         `,
         false: ``,
@@ -185,15 +235,21 @@ const iconButtonStyles = cva(
         blue: "",
         green: "",
         lime: "",
-        amber: "",
         yellow: "",
+        sand: "",
+        amber: "",
         orange: "",
+        pink: "",
         red: "",
         rose: "",
         purple: "",
         stone: "",
       },
       size: {
+        md: "w-10 h-10",
+        lg: "w-12 h-12",
+      },
+      iconSize: {
         md: "text-xl",
         lg: "text-2xl",
       },
@@ -201,6 +257,7 @@ const iconButtonStyles = cva(
     defaultVariants: {
       intent: "blue",
       size: "lg",
+      iconSize: "lg",
       disabled: false,
       hasBorder: true,
       dark: false,
@@ -209,6 +266,12 @@ const iconButtonStyles = cva(
     },
     compoundVariants: [
       {
+        faded: true,
+        dark: false,
+        className: `
+        border-white/90`,
+      },
+      {
         hasBorder: true,
         dark: false,
         className: `border-white`,
@@ -216,12 +279,17 @@ const iconButtonStyles = cva(
       {
         intent: "gray",
         disabled: false,
-        className: "bg-slate-300 hover:text-slate-600 text-slate-500",
+        className: "bg-gray-500",
       },
       {
         intent: "gray",
         disabled: true,
-        className: "bg-slate-200 text-slate-400",
+        className: "bg-gray-400",
+      },
+      {
+        intent: "gray",
+        dark: true,
+        className: "border-stone-300",
       },
       {
         intent: "stone",
@@ -284,6 +352,21 @@ const iconButtonStyles = cva(
         className: "border-yellow-400",
       },
       {
+        intent: "sand",
+        disabled: false,
+        className: "bg-amber-500",
+      },
+      {
+        intent: "sand",
+        disabled: true,
+        className: "bg-amber-500",
+      },
+      {
+        intent: "sand",
+        dark: true,
+        className: "border-amber-300",
+      },
+      {
         intent: "amber",
         disabled: false,
         className: "bg-amber-600",
@@ -327,6 +410,21 @@ const iconButtonStyles = cva(
         intent: "orange",
         dark: true,
         className: "border-orange-400",
+      },
+      {
+        intent: "pink",
+        disabled: false,
+        className: "bg-rose-400",
+      },
+      {
+        intent: "pink",
+        disabled: true,
+        className: "bg-rose-400",
+      },
+      {
+        intent: "pink",
+        dark: true,
+        className: "border-rose-200",
       },
       {
         intent: "red",
@@ -504,14 +602,30 @@ const inputStyles = cva(
 import _ from "lodash";
 import { IoIosUndo } from "react-icons/io";
 import {
+  FaArrowLeft,
+  FaBan,
   FaBicycle,
   FaCableCar,
   FaCarSide,
   FaDeleteLeft,
+  FaDoorOpen,
+  FaFaceDizzy,
+  FaFaceGrimace,
+  FaFaceGrin,
+  FaFaceGrinBeam,
+  FaFaceKiss,
+  FaFaceMeh,
+  FaFaceSadCry,
+  FaFaceSadTear,
+  FaFaceSmile,
+  FaFaceSmileBeam,
+  FaFaceSurprise,
   FaPlane,
   FaRocket,
+  FaSkull,
   FaTruckPickup,
   FaWandMagicSparkles,
+  FaX,
 } from "react-icons/fa6";
 import { TiDelete } from "react-icons/ti";
 import { RiDeleteBack2Fill, RiRestartLine } from "react-icons/ri";
@@ -520,10 +634,12 @@ import {
   MdDelete,
   MdDeleteForever,
   MdDeleteSweep,
+  MdOutlineExitToApp,
 } from "react-icons/md";
 import { AiFillDelete } from "react-icons/ai";
 import { FiRefreshCcw } from "react-icons/fi";
 import { VscDebugRestart } from "react-icons/vsc";
+import { BiSolidExit } from "react-icons/bi";
 
 function board_string_to_grid(board_string) {
   // Validate input length
@@ -561,8 +677,13 @@ function board_string_to_grid(board_string) {
 
 function DifficultyButtons({ difficulties, difficulty, setDifficulty }) {
   return (
-    <div className={buttonInnerStyles()}>
-      {difficulties.map(({ value, color, Icon }) => {
+    <div
+      className={buttonInnerStyles({
+        intent: "white",
+        density: "compact",
+      })}
+    >
+      {difficulties.map(({ value, color, Icon }, i) => {
         const isActive = value === difficulty;
 
         return (
@@ -572,10 +693,13 @@ function DifficultyButtons({ difficulties, difficulty, setDifficulty }) {
               dark: false,
               faded: !isActive,
               disabled: isActive,
+              size: "lg",
+              iconSize: "lg",
             })}
             onClick={() => setDifficulty(value)}
           >
             <Icon />
+            {/* <span className={iconButtonText({})}>{i + 1}</span> */}
           </button>
         );
       })}
@@ -649,6 +773,7 @@ function App() {
   const [tempInputValue, setTempInputValue] = useState("");
   const [succeeded, setSucceeded] = useState(false);
   const [autoSolve, setAutoSolve] = useState(false);
+  const [hasChanges, setHasChanges] = useState(false);
 
   const otherGridStates = gridStates.filter(({ player }) => {
     return me.id !== player.id;
@@ -714,11 +839,12 @@ function App() {
     setSolutionGridState(solutionGrid);
     setWrongIndexes([]);
     setMessage("");
+    setHasChanges(false);
     setSucceeded(false);
 
     const grid = autoSolve ? solutionGrid : initialGrid;
 
-    setHistory([grid]);
+    setHistory([initialGrid]);
     setInitialGridState(initialGrid);
     setPersonalGridState(grid);
   }, [difficulty]);
@@ -730,7 +856,7 @@ function App() {
       : lastPersonalGridState;
 
     if (!lastPersonalGridState) {
-      return newPersonalState;
+      return;
     }
 
     setPersonalGridState(newPersonalState);
@@ -769,6 +895,7 @@ function App() {
       }
 
       setSucceeded(false);
+      setHasChanges(true);
       setHistory((prev) => [...prev, personalGridState]);
       setPersonalGridState(newGrid, true);
       setForceUpdate(forceUpdate + 1, true);
@@ -883,44 +1010,44 @@ function App() {
       value: "easy",
       label: "🚗 Basic",
       color: `green`,
-      Icon: FaWalking,
+      Icon: FaFaceGrinBeam,
     },
     {
       value: "medium",
       label: "🚎 Intermediate",
       color: `lime`,
-      Icon: FaBicycle,
+      Icon: FaFaceSmile,
     },
     {
       value: "hard",
       label: "🚄 Advanced",
       color: `yellow`,
-      Icon: FaTruckPickup,
+      Icon: FaFaceKiss,
     },
     {
       value: "very-hard",
       label: "🚀 Expert",
       color: `orange`,
-      Icon: FaCableCar,
+      Icon: FaFaceMeh,
     },
     {
       value: "insane",
       label: "☄ Guru",
       color: `red`,
-      Icon: FaPlane,
+      Icon: FaFaceDizzy,
     },
     {
       value: "inhuman",
       label: "🌌 Galaxy Brain",
       color: `rose`,
-      Icon: FaRocket,
+      Icon: FaSkull,
     },
   ];
 
   return (
     <>
       <main className={mainStyles()}>
-        <h1 className="grid justify-center font-sans">
+        <h1 className="grid justify-center font-sans pb-6">
           <span className="text-6xl font-bold">Sudoku</span>
           <span className="text-2xl font-bold">Multiplayer</span>
           <div className={mouseSlotStyles()}>
@@ -931,16 +1058,46 @@ function App() {
                 style={{
                   // left: `${player?.state?.pos?.x * width}px`,
                   // top: `${player?.state?.pos?.y * height}px`,
-                  color: player?.state?.profile?.color,
+                  backgroundColor: player?.state?.profile?.color,
                 }}
               >
-                <FaMousePointer />
+                {/* <FaMousePointer /> */}
               </div>
             ))}
           </div>
         </h1>
 
+        <div className={buttonsStyles({})}>
+          <DifficultyButtons
+            setDifficulty={setDifficulty}
+            difficulties={difficulties}
+            difficulty={difficulty}
+          />
+        </div>
+
         <div className={gridStyles()}>
+          <div className={sideButtonsStyles()}>
+            {hasSolutionAttempts && (
+              <button
+                onClick={() => {
+                  setSucceeded(false);
+                  setSuccesses(0);
+                  setSuccessesWithAutoSolve(0);
+                  setSolutionAttempts(0);
+                }}
+                className={iconButtonStyles({
+                  intent: "gray",
+                  iconSize: "md",
+                  disabled: false,
+                })}
+              >
+                <FaDoorOpen />
+              </button>
+            )}
+            <div className={sideButtonsTextStyles()}>{`${
+              successesWithAutoSolve ? `*` : ``
+            }${successes} / ${solutionAttempts}`}</div>
+          </div>
           <div className={gridInnerStyles()}>
             {personalGridState.map((grid, gridIndex) => (
               <div key={gridIndex} className={subgridStyles()}>
@@ -1074,94 +1231,93 @@ function App() {
           </div>
         </div>
 
-        <div className="h-[1em]">{message}</div>
         {/* <div className={buttonsStyles()}></div> */}
         <div className={buttonsStyles({})}>
-          <DifficultyButtons
-            setDifficulty={setDifficulty}
-            difficulties={difficulties}
-            difficulty={difficulty}
-          />
-          <div className={buttonInnerStyles({ intent: "transparent" })}>
-            <button
-              disabled={succeeded}
-              onClick={checkSolution}
-              className={iconButtonStyles({
-                intent: succeeded ? "green" : "blue",
-                disabled: succeeded,
-              })}
-            >
-              {succeeded ? <FaStar /> : <FaCheck />}
-            </button>
-            {!disabled_undo && (
-              <button
-                disabled={disabled_undo}
-                onClick={() => {
-                  let newHistory = [...history];
-                  newHistory.splice(newHistory.length - 1, 1);
+          <div className={bottomButtonStyles({})}>
+            <div className={buttonGroupStyles({})}>
+              {!disabled_undo && (
+                <button
+                  disabled={disabled_undo}
+                  onClick={() => {
+                    let newHistory = [...history];
+                    newHistory.splice(newHistory.length - 1, 1);
 
-                  setPersonalGridState(
-                    history[history.length - 2] || initialGridState
-                  );
-                  setHistory(newHistory);
-                }}
-                className={iconButtonStyles({
-                  disabled: disabled_undo,
-                  intent: "stone",
-                })}
-              >
-                <IoIosUndo />
-              </button>
-            )}
-            {hasWrongIndexes ? (
+                    const lastPersonalGridState = history[history.length - 2];
+                    const newPersonalState =
+                      lastPersonalGridState || initialGridState;
+                    if (lastPersonalGridState || newHistory.length) {
+                      setHasChanges(true);
+                    } else {
+                      setHasChanges(false);
+                    }
+
+                    setPersonalGridState(newPersonalState);
+                    setHistory(newHistory);
+                  }}
+                  className={iconButtonStyles({
+                    disabled: disabled_undo,
+                    intent: "gray",
+                  })}
+                >
+                  <IoIosUndo />
+                </button>
+              )}
+              {hasChanges && (
+                <button
+                  onClick={() => {
+                    setHasChanges(false);
+                    setAutoSolve(false);
+                    setHistory([...history, initialGridState]);
+                    setPersonalGridState(initialGridState);
+                  }}
+                  className={iconButtonStyles({
+                    intent: "sand",
+                  })}
+                >
+                  <MdDelete />
+                </button>
+              )}
+              {hasWrongIndexes && (
+                <button
+                  onClick={() => {
+                    setWrongIndexes([]);
+                    setMessage("");
+                  }}
+                  className={iconButtonStyles({
+                    intent: "pink",
+                    disabled: false,
+                    dark: false,
+                  })}
+                >
+                  <FaBan />
+                </button>
+              )}
+            </div>
+            <div className={buttonGroupStyles({ side: "right" })}>
               <button
-                onClick={() => {
-                  setWrongIndexes([]);
-                  setMessage("");
-                }}
+                onClick={() => setAutoSolve((prev) => !prev)}
                 className={iconButtonStyles({
-                  intent: "stone",
+                  intent: autoSolve ? "purple" : "gray",
+                  iconSize: "md",
                   disabled: false,
                 })}
               >
-                <AiFillDelete />
+                <FaWandMagicSparkles />
               </button>
-            ) : (
-              <></>
-            )}
-            {hasSolutionAttempts ? (
               <button
-                onClick={() => {
-                  setSucceeded(false);
-                  setSuccesses(0);
-                  setSuccessesWithAutoSolve(0);
-                  setSolutionAttempts(0);
-                }}
+                disabled={succeeded}
+                onClick={checkSolution}
                 className={iconButtonStyles({
-                  intent: "yellow",
-                  disabled: false,
+                  intent: succeeded ? "green" : "blue",
+                  disabled: succeeded,
                 })}
               >
-                <VscDebugRestart />
+                {succeeded ? <FaStar /> : <FaCheck />}
               </button>
-            ) : (
-              <></>
-            )}
-            <button
-              onClick={() => setAutoSolve((prev) => !prev)}
-              className={iconButtonStyles({
-                intent: autoSolve ? "purple" : "stone",
-                size: "md",
-                disabled: false,
-              })}
-            >
-              <FaWandMagicSparkles />
-            </button>
+            </div>
           </div>
         </div>
-        <div className="">{`Score: ${
-          successesWithAutoSolve ? `*` : ``
-        }${successes}/${solutionAttempts}`}</div>
+        <div className={messageStyles()}>{message}</div>
         <footer className={footerStyles()}></footer>
       </main>
     </>
