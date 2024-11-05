@@ -79,7 +79,7 @@ const tooltipItemStyles = cva(
   "w-8 h-8 border-2 border-x-amber-400 border-t-amber-400 border-b-amber-500 bg-amber-400 font-bold rounded flex items-center justify-center cursor-pointer hover:bg-amber-400"
 );
 const tooltipItemsStyles = cva(
-  "grid grid-cols-3 p-[0.4rem] pb-[0.5rem] bg-amber-200 border-2 border-x-amber-300 border-t-amber-100 border-b-amber-400 rounded-lg gap-2 shadow-xl"
+  "z-20 grid grid-cols-3 p-[0.4rem] pb-[0.5rem] bg-amber-200 border-2 border-x-amber-300 border-t-amber-100 border-b-amber-400 rounded-lg gap-2 shadow-xl"
 );
 const footerStyles = cva(
   `
@@ -91,8 +91,7 @@ const footerStyles = cva(
   before:border-t-4 before:border-teal-300/80
   `
 );
-const subgridStyles = cva("grid grid-cols-3 gap-1");
-const inputContainerStyles = cva("");
+const subgridStyles = cva("grid grid-cols-3 gap-1 z-0");
 const inputBadgeStyles = cva(
   "absolute flex items-center justify-center z-10 rounded-full -translate-y-2/4 translate-x-2/4 w-8 h-8 top-0 right-0 bg-red-200"
 );
@@ -531,77 +530,30 @@ const iconButtonStyles = cva(
   }
 );
 
-const buttonStyles = cva(
-  "flex text-xl items-center gap-x-2 font-bold px-6 py-2 rounded-lg transition-colors",
+const inputContainerStyles = cva(
+  `
+  
+`,
   {
     variants: {
-      disabled: {
+      selected: {
         true: "",
         false: "",
       },
-      intent: {
-        gray: "",
-        blue: "text-white",
-        green:
-          "text-white outline bg-green-600 outline-4 outline-offset-2 outline-green-600",
-        yellow: "text-white",
-      },
-      icon: {
-        true: "text-3xl",
-      },
     },
-    defaultVariants: {
-      intent: "blue",
-      disabled: false,
-    },
-    compoundVariants: [
-      {
-        intent: "gray",
-        disabled: false,
-        className:
-          "bg-slate-300 hover:text-slate-700 active:bg-slate-400 text-slate-500",
-      },
-      {
-        intent: "gray",
-        disabled: true,
-        className: "bg-slate-200 text-white",
-      },
-      {
-        intent: "blue",
-        disabled: false,
-        className: "hover:bg-blue-600 bg-blue-500",
-      },
-      {
-        intent: "blue",
-        disabled: true,
-        className: "bg-blue-300",
-      },
-      {
-        intent: "yellow",
-        disabled: false,
-        className: "hover:bg-yellow-700 bg-yellow-600",
-      },
-      {
-        intent: "yellow",
-        disabled: true,
-        className: "bg-yellow-300",
-      },
-      {
-        intent: "green",
-        disabled: false,
-        className: "hover:bg-green-700",
-      },
-      {
-        intent: "green",
-        disabled: true,
-        className: "",
-      },
-    ],
   }
 );
 
 const inputStyles = cva(
-  "transition-colors w-7 h-7 sm:w-10 sm:h-10 text-lg font-bold border-2 rounded-[3px] text-center relative outline outline-4 -outline-offset-2 outline-transparent",
+  `
+  transition-colors
+  w-7 h-7 sm:w-10 sm:h-10
+  text-lg font-bold border-2 rounded-[3px] 
+  text-center relative outline 
+  
+  
+  outline-2 outline-offset-1 outline-transparent
+  `,
   {
     variants: {
       selected: {
@@ -672,6 +624,7 @@ import _ from "lodash";
 import { IoIosUndo } from "react-icons/io";
 import {
   FaArrowLeft,
+  FaArrowRotateLeft,
   FaBan,
   FaBicycle,
   FaCableCar,
@@ -709,6 +662,7 @@ import { AiFillDelete } from "react-icons/ai";
 import { FiRefreshCcw } from "react-icons/fi";
 import { VscDebugRestart } from "react-icons/vsc";
 import { BiSolidExit } from "react-icons/bi";
+import Progression from "./Progression";
 
 function board_string_to_grid(board_string) {
   // Validate input length
@@ -749,6 +703,7 @@ function DifficultyButtons({
   difficulty,
   setDifficulty,
   size = "lg",
+  disabled = false,
 }) {
   return (
     <div
@@ -762,11 +717,12 @@ function DifficultyButtons({
 
         return (
           <button
+            disabled={disabled}
             className={iconButtonStyles({
               intent: color,
               dark: false,
               faded: !isActive,
-              disabled: isActive,
+              disabled: disabled || isActive,
               size,
               iconSize: size,
             })}
@@ -787,6 +743,9 @@ function App() {
   const me = myPlayer();
   const players = usePlayersList(true);
   const isHost = useIsHost();
+
+  const numLevels = 4;
+
   // const { width, height } = useWindowSize();
 
   const otherPlayers = players.filter((player) => {
@@ -848,6 +807,7 @@ function App() {
   const [succeeded, setSucceeded] = useState(false);
   const [autoSolve, setAutoSolve] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
+  const [levelColors, setLevelColors] = useState([]);
 
   const otherGridStates = gridStates.filter(({ player }) => {
     return me.id !== player.id;
@@ -890,6 +850,49 @@ function App() {
 
   const gridRef = useRef(null);
 
+  const difficulties = [
+    {
+      value: "easy",
+      label: "🚗 Basic",
+      color: `green`,
+      Icon: FaFaceGrinBeam,
+    },
+    {
+      value: "medium",
+      label: "🚎 Intermediate",
+      color: `lime`,
+      Icon: FaFaceSmile,
+    },
+    {
+      value: "hard",
+      label: "🚄 Advanced",
+      color: `yellow`,
+      Icon: FaFaceKiss,
+    },
+    {
+      value: "very-hard",
+      label: "🚀 Expert",
+      color: `orange`,
+      Icon: FaFaceMeh,
+    },
+    {
+      value: "insane",
+      label: "☄ Guru",
+      color: `red`,
+      Icon: FaFaceDizzy,
+    },
+    {
+      value: "inhuman",
+      label: "🌌 Galaxy Brain",
+      color: `rose`,
+      Icon: FaSkull,
+    },
+  ];
+
+  const difficultyProps = useMemo(() => {
+    return difficulties.find(({ value }) => value === difficulty);
+  }, [difficulty]);
+
   useEffect(() => {
     if (!message) {
       return;
@@ -897,6 +900,12 @@ function App() {
 
     console.log(message);
   }, [message]);
+
+  const [currentLevel, setCurrentLevel] = useState(0);
+
+  const nextLevel = () => {
+    setCurrentLevel((prev) => prev + 1);
+  };
 
   useEffect(() => {
     if (!isHost) {
@@ -923,7 +932,7 @@ function App() {
     setHistory([initialGrid]);
     setInitialGridState(initialGrid);
     setPersonalGridState(grid);
-  }, [difficulty]);
+  }, [difficulty, currentLevel]);
 
   useEffect(() => {
     const lastPersonalGridState = history[history.length - 1];
@@ -1000,6 +1009,11 @@ function App() {
     return newHistory;
   }
 
+  const resetLevels = () => {
+    setCurrentLevel(0);
+    setLevelColors([]);
+  };
+
   // Check if the solution is valid
   const checkSolution = () => {
     if (succeeded) {
@@ -1054,6 +1068,7 @@ function App() {
       setSuccessesWithAutoSolve(successesWithAutoSolve + 1);
     }
     setSucceeded(true);
+    setLevelColors((prev) => [...prev, difficultyProps.color]);
   };
 
   const getCellPosition = (gridIndex, cellIndex) => {
@@ -1093,44 +1108,7 @@ function App() {
   //   });
   // }, 20);
 
-  const difficulties = [
-    {
-      value: "easy",
-      label: "🚗 Basic",
-      color: `green`,
-      Icon: FaFaceGrinBeam,
-    },
-    {
-      value: "medium",
-      label: "🚎 Intermediate",
-      color: `lime`,
-      Icon: FaFaceSmile,
-    },
-    {
-      value: "hard",
-      label: "🚄 Advanced",
-      color: `yellow`,
-      Icon: FaFaceKiss,
-    },
-    {
-      value: "very-hard",
-      label: "🚀 Expert",
-      color: `orange`,
-      Icon: FaFaceMeh,
-    },
-    {
-      value: "insane",
-      label: "☄ Guru",
-      color: `red`,
-      Icon: FaFaceDizzy,
-    },
-    {
-      value: "inhuman",
-      label: "🌌 Galaxy Brain",
-      color: `rose`,
-      Icon: FaSkull,
-    },
-  ];
+  const isLastLevel = currentLevel === numLevels - 1;
 
   return (
     <>
@@ -1157,9 +1135,18 @@ function App() {
 
         <div className={buttonsStyles({})}>
           <DifficultyButtons
+            disabled={succeeded}
             setDifficulty={setDifficulty}
             difficulties={difficulties}
             difficulty={difficulty}
+          />
+        </div>
+
+        <div className={``}>
+          <Progression
+            num={numLevels}
+            numFilled={currentLevel}
+            colors={levelColors}
           />
         </div>
 
@@ -1250,6 +1237,7 @@ function App() {
 
                   return (
                     <Input
+                      className={inputContainerStyles({ selected })}
                       delay={
                         (gridIndex * numCellsPerSubGrid + (cellIndex + 1)) *
                         delayInterval
@@ -1277,7 +1265,11 @@ function App() {
                           outlineColor: selectedPlayer?.state?.profile?.color,
                           color: isSelectedIndex ? null : otherColor || null,
                         },
-                        onBlur: () => {
+                        onBlur: (ev) => {
+                          if (ev.currentTarget.contains(ev.relatedTarget)) {
+                            return;
+                          }
+
                           setSelectedIndex(false);
 
                           const hasOther =
@@ -1402,14 +1394,27 @@ function App() {
                 <FaWandMagicSparkles />
               </button>
               <button
-                disabled={succeeded}
-                onClick={checkSolution}
+                onClick={
+                  succeeded
+                    ? isLastLevel
+                      ? resetLevels
+                      : nextLevel
+                    : checkSolution
+                }
                 className={iconButtonStyles({
                   intent: succeeded ? "green" : "blue",
                   disabled: succeeded,
                 })}
               >
-                {succeeded ? <FaAngleDoubleRight /> : <FaCheck />}
+                {succeeded ? (
+                  isLastLevel ? (
+                    <FaArrowRotateLeft />
+                  ) : (
+                    <FaAngleDoubleRight />
+                  )
+                ) : (
+                  <FaCheck />
+                )}
               </button>
             </div>
           </div>

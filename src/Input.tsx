@@ -9,7 +9,7 @@ const inputContainerStyles = cva("");
 
 import gsap from "gsap";
 
-function Input({ tooltipProps, inputProps, succeeded, delay }) {
+function Input({ tooltipProps, inputProps, succeeded, delay, className }) {
   const ref = useRef(null);
 
   useEffect(() => {
@@ -30,7 +30,7 @@ function Input({ tooltipProps, inputProps, succeeded, delay }) {
   }, [succeeded]);
 
   return (
-    <div ref={ref} className={inputContainerStyles()}>
+    <div ref={ref} className={className}>
       {/* <div className={inputBadgeStyles()}>{index}</div> */}
       <Tooltip
         // ref={tippyRef}
