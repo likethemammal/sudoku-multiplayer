@@ -243,10 +243,10 @@ const iconButtonStyles = cva(
   before:rounded-full
   before:-translate-y-1
   before:content-[' ']
-  before:absolute before:inset-0
-  before:bg-white/20 
-
-  
+  before:absolute
+  before:z-0
+  before:inset-0
+  before:bg-white/20
 
   before:transition-transform
   `,
@@ -255,10 +255,12 @@ const iconButtonStyles = cva(
       disabled: {
         true: "",
         false: `
-        hover:before:bg-white/10
-        hover:before:translate-y-0
-        active:scale-[1.02]
-        hover:scale-[0.99]
+          hover:before:bg-slate-500/10
+          hover:before:translate-y-0
+          hover:scale-[0.99]
+        
+          active:scale-[1.015]
+          active:before:bg-slate-600/10
         `,
       },
       hasBorder: {
@@ -269,9 +271,9 @@ const iconButtonStyles = cva(
       },
       active: {
         true: `
-          scale-[0.99]
           before:bg-transparent
           before:translate-y-0
+          scale-[0.99]
         `,
         false: ``,
       },
