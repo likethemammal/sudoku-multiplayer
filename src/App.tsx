@@ -11,6 +11,7 @@ import {
   usePlayerState,
   usePlayersList,
   usePlayersState,
+  openDiscordInviteDialog,
 } from "playroomkit";
 import {
   FaAngleDoubleRight,
@@ -65,7 +66,21 @@ const buttonGroupStyles = cva("flex gap-x-4", {
   },
 });
 const mouseStyles = cva(
-  "w-4 h-4 shadow border-white border-2 bg-white/70 rounded text-1xl text-slate-300"
+  "w-4 h-4 shadow border-white border-2 rounded text-1xl text-slate-300",
+  {
+    variants: {
+      color: {
+        blue: `bg-blue-500`,
+        lavender: `bg-violet-400`,
+        lime: `bg-lime-500`,
+        fuchsia: `bg-fuchsia-400`,
+        white: `bg-white/70`,
+      },
+    },
+    defaultVariants: {
+      color: "white",
+    },
+  }
 );
 const mouseSlotStyles = cva("flex flex-row items-center gap-x-2 pt-2");
 const playerSlotStyles = cva("w-4 h-4 border-2 border-slate-300");
@@ -530,95 +545,7 @@ const iconButtonStyles = cva(
   }
 );
 
-const inputContainerStyles = cva(
-  `
-  
-`,
-  {
-    variants: {
-      selected: {
-        true: "",
-        false: "",
-      },
-    },
-  }
-);
-
-const inputStyles = cva(
-  `
-  transition-colors
-  w-7 h-7 sm:w-10 sm:h-10
-  text-lg font-bold border-2 rounded-[3px] 
-  text-center relative outline 
-  
-  
-  outline-2 outline-offset-1 outline-transparent
-  `,
-  {
-    variants: {
-      selected: {
-        true: "",
-        false: "",
-      },
-      isInitial: {
-        true: "bg-amber-400 border-x-amber-400 border-t-amber-300 border-b-amber-600 text-amber-900 disabled:text-amber-900",
-        false: "",
-      },
-      status: {
-        wrong: "",
-        success: "",
-        none: "",
-      },
-    },
-    defaultVariants: {
-      status: "none",
-      isInitial: false,
-      selected: false,
-    },
-    compoundVariants: [
-      {
-        selected: true,
-        className: "bg-amber-200",
-      },
-      {
-        selected: true,
-        status: "wrong",
-        className: "bg-amber-200",
-      },
-      {
-        selected: false,
-        status: "wrong",
-        className:
-          "bg-red-300 line-through text-red-800 border-x-red-300 border-t-red-200 border-b-red-400",
-      },
-      {
-        isInitial: false,
-        status: "none",
-        className:
-          "bg-amber-200 border-x-amber-200 border-t-amber-100 border-b-amber-400",
-      },
-      {
-        isInitial: false,
-        status: "success",
-        className:
-          "pointer-events-none bg-green-500 border-x-green-500 border-t-green-400 border-b-green-600 text-green-200 disabled:text-green-900",
-      },
-      {
-        isInitial: true,
-        status: "success",
-        className:
-          "bg-green-600 border-x-green-600 border-t-green-500 border-b-green-700 text-green-800 disabled:text-green-800",
-      },
-      {
-        isInitial: false,
-        status: "none",
-        selected: false,
-        className:
-          "hover:bg-amber-300 hover:border-x-amber-300 hover:border-t-amber-200 hover:border-b-amber-400",
-      },
-    ],
-  }
-);
+import { inputStyles, inputContainerStyles } from "./Input.styles";
 
 import _ from "lodash";
 import { IoIosUndo } from "react-icons/io";
@@ -737,6 +664,16 @@ function DifficultyButtons({
   );
 }
 
+const colorOptions = [
+  // `purple`,
+  // `orange`,
+  `blue`,
+  `lavender`,
+  `fuchsia`,
+  `lime`,
+  `cyan`,
+];
+
 function App() {
   // const ref = useRef();
   // const positionRef = useMousePosition();
@@ -752,10 +689,10 @@ function App() {
     return me.id !== player.id;
   });
 
-  const otherColors = otherPlayers.reduce((colors, player) => {
+  const otherColors = otherPlayers.reduce((colors, player, playerIndex) => {
     return {
       ...colors,
-      [player.id]: player?.state?.profile?.color,
+      [player.id]: colorOptions[playerIndex],
     };
   }, {});
 
@@ -801,6 +738,7 @@ function App() {
     false
   );
   const selectedIndexesWithState = usePlayersState("selectedIndex");
+  const playerColors = usePlayersState("_color");
   const gridStates = usePlayersState("gridState");
 
   const [tempInputValue, setTempInputValue] = useState("");
@@ -819,7 +757,21 @@ function App() {
 
   const hasSelectedIndex = !!selectedIndex;
 
-  const myColor = me?.state?.profile?.color;
+  const [myColor, setMyColor] = usePlayerState(me, "_color", ``);
+
+  useEffect(() => {
+    if (myColor) {
+      return;
+    }
+
+    const [nextColorOption] = colorOptions.filter((colorOption) => {
+      return !playerColors.find(({ player, state: currentColor }) => {
+        return currentColor === colorOption;
+      });
+    });
+
+    setMyColor(nextColorOption);
+  }, [myColor]);
 
   const hasWrongIndexes = !!wrongIndexes.length;
 
@@ -1118,17 +1070,16 @@ function App() {
           <span className="text-2xl font-bold">Multiplayer</span>
           <div className={mouseSlotStyles()}>
             {playerSlots.map((player, i) => (
-              <div
+              <button
                 key={i}
-                className={mouseStyles()}
-                style={{
-                  // left: `${player?.state?.pos?.x * width}px`,
-                  // top: `${player?.state?.pos?.y * height}px`,
-                  backgroundColor: player?.state?.profile?.color,
-                }}
+                disabled={!!player}
+                onClick={!player ? openDiscordInviteDialog : () => {}}
+                className={mouseStyles({
+                  color: player ? playerColors[i]?.state : ``,
+                })}
               >
                 {/* <FaMousePointer /> */}
-              </div>
+              </button>
             ))}
           </div>
         </h1>
@@ -1200,9 +1151,7 @@ function App() {
 
                   const isOther = !!otherCharacter;
 
-                  const otherColor = isOther
-                    ? otherColors[otherPlayer?.id]
-                    : "";
+                  const otherColor = isOther ? otherPlayer?.state?._color : "";
 
                   const isEmpty = isEmptyForMe && !otherCharacter;
 
@@ -1235,6 +1184,24 @@ function App() {
                   const numCellsPerSubGrid = 3;
                   const delayInterval = 0.02;
 
+                  const disabled = isInitial || succeeded;
+
+                  const playerInputColor = isSelectedIndex
+                    ? `amber`
+                    : otherColor || `amber`;
+
+                  const inputColor = succeeded
+                    ? isInitial
+                      ? `watermelon`
+                      : `green`
+                    : isWrong
+                    ? selected
+                      ? `amber`
+                      : `red`
+                    : isInitial
+                    ? `rock`
+                    : playerInputColor;
+
                   return (
                     <Input
                       className={inputContainerStyles({ selected })}
@@ -1253,17 +1220,12 @@ function App() {
                       }}
                       inputProps={{
                         className: inputStyles({
-                          status: isWrong
-                            ? "wrong"
-                            : succeeded
-                            ? "success"
-                            : "none",
-                          isInitial,
-                          selected,
+                          color: inputColor,
+                          disabled,
+                          strike: isWrong,
                         }),
                         style: {
                           outlineColor: selectedPlayer?.state?.profile?.color,
-                          color: isSelectedIndex ? null : otherColor || null,
                         },
                         onBlur: (ev) => {
                           if (ev.currentTarget.contains(ev.relatedTarget)) {
@@ -1306,7 +1268,7 @@ function App() {
                           // handleClose();
                         },
                         value,
-                        disabled: isInitial,
+                        disabled,
                       }}
                     />
                   );
